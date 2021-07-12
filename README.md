@@ -61,17 +61,26 @@ All Scripts used to analyze REX data go in GitHub rex_analysis repository in fol
 
 *What do scripts contain?*
 
-All scripts have a standard header - here’s an example: https://space-lab-msu.github.io/r_guide/documentation.html 
-
-Follow .R script template (load packages at start, read in data from Google Drive location after setting .Renviron)
-
-Commented code
-
-Output data (for L1, L2, L3 scripts) at end of script; note the outputs in the header.
+- All scripts have a standard header - here’s an example: https://space-lab-msu.github.io/r_guide/documentation.html 
+- Follow .R script template (load packages at start, read in data from Google Drive location after setting .Renviron)
+- Commented code
+- Exporting data (for L1, L2, L3 scripts) to KBS_LTER_REX Google Shared Drive at end of script; note the outputs in the header.
 
 ## R code
 
-Below are lists of parent folders in this repository that contain data scripts organized by L0, L1, L2, etc. 
+Below are lists of parent folders in this repository that match the same folder name in the KBS_LTER_REX Google Shared Drive. Each of these folders contains L0, L1, L2, etc. folders with the appropriate R scripts. 
+
+**T7**
+- T7_warmx_plant_phenology
+- T7_warmx_plantCN
+- T7_ANPP
+- T7_warmx_VOC
+- T7_warmx_SLA
+- T7_warmx_plant_comp
+
+(Enter other folders here as they are added)
+
+*Nested inside each parent folder above are the following folders:*
 
 **L0**: 
 
@@ -80,25 +89,18 @@ Below are lists of parent folders in this repository that contain data scripts o
 
 
 **L1**: 
-
 - Contains scripts to convert L0 data to L1 data. *L1 Data* are cleaned/modified L0 Data that are cleaned via *L1 Scripts*. The script to generate L1 data is very important, and anyone contributing should refer to someone who is knowledgeable about these data (PI) and the decisions to edit it.
-
 - We will provide example scripts to go from L0 to L1. After an individual works on their first L1 script, they should meet with Sven / Nameer to go over it and get feedback.
-
 - The resolution of *L1 Data* is the same as *L0 Data* (meaning each record reflects same temporal and spatial scales as *L0 Data*)
 
 
 **L2**: 
-
 - Contains scripts to convert L1 data to L2 data. *L2 Data* are derived data products that are gap filled, or the result of merging multiple L1 Data, pre-analysis.
-
 - The resolution of *L2 Data* is the same as *L1 Data* (meaning each record reflects same temporal and spatial scales as *L1 Data*)
 
 
-**L2**: 
-
+**L3**: 
 - Contains scripts to convert L2 data to L3 data. *L3 Data* are aggregated L2 data to a summary statistic (e.g., mean, variation) or a metric (e.g., diversity measure for plant community data). Aggregation is by a group or treatment and results in some coarser level L3 data product that usually results in fewer rows than L0, L1, or L2 (e.g., subplot, or plot, treatment, species, etc.). 
-
 - The resolution of *L3 Data* is coarser than L1, L2, meaning each record is an aggregate measure of data at lower level.
 
 
