@@ -6,17 +6,27 @@ National Science Foundation Grants:
 
 ## PIs involved
 Nick Haddad (MSU, KBS)
+
 Sarah Evans (MSU, KBS)
+
 Phil Robertson (MSU, KBS)
+
 Jennifer Lau (Indiana University)
+
 Steve Hamilton (MSU, KBS)
+
 Christine Sprunger (Ohio State)
+
 Phoebe Zarnetske (MSU)
+
 
 ## Overview
 Data cleaning and prep = R scripts in this repistory (separated into appropriate folders: /L0, /L1, /L2, etc.)
+
 Analysis = code & Rmarkdown-produced results on https://github.com/kbs-lter/rex-analysis 
+
 Results = e.g., Rmarkdown-produced PDFs on KBS_LTER_REX Google Shared Drive
+
 If non-R users want to analyze data, we will work with you to ensure you’re using the correct data.
 
 
@@ -34,22 +44,33 @@ We are following the Environmental Data Initiative’s (EDI; https://environment
 In this repository, R scripts are used to convert L0 Data to L1 Data, L1 Data to L2 Data, etc. (these are Step 1, Step 2 in figure above). 
 
 *Where do scripts go?*
+
 Folder names in the Google Shared Drive are the same as in this GitHub repository. 
+
 Scripts used to create L1 Data go in L1 folder in this rex_data repository in the subdirectory appropriate to the data theme. 
 
+
 Example: 
-   L0 script to check plant phenology data in T7 would go here: https://github.com/kbs-lter/rex-data/T7_warmx_plant_phenology/L0
-   L1 Script to clean L0 plant phenology data in T7, creating the L1 Data, would go here: https://github.com/kbs-lter/rex-data/T7_warmx_plant_phenology/L1 
+
+L0 script to check plant phenology data in T7 would go here: https://github.com/kbs-lter/rex-data/T7_warmx_plant_phenology/L0
+
+L1 Script to clean L0 plant phenology data in T7, creating the L1 Data, would go here: https://github.com/kbs-lter/rex-data/T7_warmx_plant_phenology/L1 
 
 All Scripts used to analyze REX data go in GitHub rex_analysis repository in folder appropriate to analysis topic.
 
+
 *What do scripts contain?*
+
 All scripts have a standard header - here’s an example: https://space-lab-msu.github.io/r_guide/documentation.html 
+
 Follow .R script template (load packages at start, read in data from Google Drive location after setting .Renviron)
+
 Commented code
+
 Output data (for L1, L2, L3 scripts) at end of script; note the outputs in the header.
 
 ## R code
+
 Below are lists of parent folders in this repository that contain data scripts organized by L0, L1, L2, etc. 
 
 - **L0**: Contains scripts to check L0 data. *L0 Data* are raw data (unedited)- entered from datasheet or directly entered/logged electronically in field. *L0 Scripts* are scripts for checking raw data (reporting missing observations, number of observations, list of column headers and unique , etc.). Once raw data (*L0 Data*) are entered or downloaded from an instrument, do not change raw data directly in a spreadsheet (No manual fixing of data in Excel or other spreadsheet program) - all editing occurs in R scripts located in L1, L2, etc. folders for track record and subsequent editing.
