@@ -2,9 +2,9 @@
 This repository contains data scripts for the KBS LTER Rain Exclusion Experiment, located at Michigan State University's (MSU) Kellogg Biological Station Long Term Ecological Research Site (KBS LTER).
 
 ## Funding
-National Science Foundation Grants: 
+Support for this research was provided by the NSF Long-term Ecological Research Program (DEB 1832042) at the Kellogg Biological Station and by Michigan State University AgBioResearch. Please contact KBS LTER Principal Investigator Prof. Nick Haddad with notice of your publications or for questions on appropriate site, experiment, or acknowledgement language. Contact info & more details: https://lter.kbs.msu.edu/research/conducting-research/acknowledgements/.
 
-## PIs involved
+## PIs involved in REX
 Nick Haddad (MSU, KBS)
 
 Sarah Evans (MSU, KBS)
