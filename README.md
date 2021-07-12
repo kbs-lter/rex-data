@@ -78,19 +78,19 @@ Below are lists of parent folders in this repository that contain data scripts o
 
 - **L1**: Contains scripts to convert L0 data to L1 data. *L1 Data* are cleaned/modified L0 Data that are cleaned via *L1 Scripts*. The script to generate L1 data is very important, and anyone contributing should refer to someone who is knowledgeable about these data (PI) and the decisions to edit it.
 
-We will provide example scripts to go from L0 to L1. After an individual works on their first L1 script, they should meet with Sven / Nameer to go over it and get feedback.
+- We will provide example scripts to go from L0 to L1. After an individual works on their first L1 script, they should meet with Sven / Nameer to go over it and get feedback.
 
-The resolution of *L1 Data* is the same as *L0 Data* (meaning each record reflects same temporal and spatial scales as *L0 Data*)
+- The resolution of *L1 Data* is the same as *L0 Data* (meaning each record reflects same temporal and spatial scales as *L0 Data*)
 
 
 - **L2**: Contains scripts to convert L1 data to L2 data. *L2 Data* are derived data products that are gap filled, or the result of merging multiple L1 Data, pre-analysis.
 
-The resolution of *L2 Data* is the same as *L1 Data* (meaning each record reflects same temporal and spatial scales as *L1 Data*)
+- The resolution of *L2 Data* is the same as *L1 Data* (meaning each record reflects same temporal and spatial scales as *L1 Data*)
 
 
 - **L2**: Contains scripts to convert L2 data to L3 data. *L3 Data* are aggregated L2 data to a summary statistic (e.g., mean, variation) or a metric (e.g., diversity measure for plant community data). Aggregation is by a group or treatment and results in some coarser level L3 data product that usually results in fewer rows than L0, L1, or L2 (e.g., subplot, or plot, treatment, species, etc.). 
 
-The Resolution of *L3 Data* is coarser than L1, L2, meaning each record is an aggregate measure of data at lower level.
+- The resolution of *L3 Data* is coarser than L1, L2, meaning each record is an aggregate measure of data at lower level.
 
 
 ## Analysis
