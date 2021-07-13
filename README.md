@@ -83,25 +83,24 @@ Below are lists of parent folders in this repository that match the same folder 
 *Nested inside each parent folder above are the following folders:*
 
 **L0**: 
-
-- Contains scripts to check L0 data. *L0 Data* are raw data (unedited)- entered from datasheet or directly entered/logged electronically in field. *L0 Scripts* are scripts for checking raw data (reporting missing observations, number of observations, list of column headers and unique , etc.). 
+- The L0 folder in this repository contains scripts to check L0 data. *L0 Data* are raw data (unedited)- entered from datasheet or directly entered/logged electronically in field. *L0 Scripts* are scripts for checking raw data (reporting missing observations, number of observations, list of column headers and unique , etc.). 
 - Once raw data (*L0 Data*) are entered or downloaded from an instrument, do not change raw data directly in a spreadsheet (No manual fixing of data in Excel or other spreadsheet program) - all editing occurs in R scripts located in L1, L2, etc. folders for track record and subsequent editing.
 
 
 **L1**: 
-- Contains scripts to convert L0 data to L1 data. *L1 Data* are cleaned/modified L0 Data that are cleaned via *L1 Scripts*. The script to generate L1 data is very important, and anyone contributing should refer to someone who is knowledgeable about these data (PI) and the decisions to edit it.
+- The L1 folder in this repository contains scripts to convert L0 data to L1 data. 
+- *L1 Data* are cleaned/modified L0 Data that are cleaned via *L1 Scripts*. 
+- *L1 Data* could be data that are derived data products that are gap filled.
+- *L1 Data* could be data that are merged data products, as a result of merging multiple L1 Data, pre-analysis.
+- The script to generate L1 data is very important, and anyone contributing should refer to someone who is knowledgeable about these data (PI) and the decisions to edit it.
 - We will provide example scripts to go from L0 to L1. After an individual works on their first L1 script, they should meet with Sven / Nameer to go over it and get feedback.
-- The resolution of *L1 Data* is the same as *L0 Data* (meaning each record reflects same temporal and spatial scales as *L0 Data*)
+- The **resolution** of *L1 Data* is the same as *L0 Data* (meaning each record reflects same temporal and spatial resolution as *L0 Data*)
 
 
 **L2**: 
-- Contains scripts to convert L1 data to L2 data. *L2 Data* are derived data products that are gap filled, or the result of merging multiple L1 Data, pre-analysis.
-- The resolution of *L2 Data* is the same as *L1 Data* (meaning each record reflects same temporal and spatial scales as *L1 Data*)
-
-
-**L3**: 
-- Contains scripts to convert L2 data to L3 data. *L3 Data* are aggregated L2 data to a summary statistic (e.g., mean, variation) or a metric (e.g., diversity measure for plant community data). Aggregation is by a group or treatment and results in some coarser level L3 data product that usually results in fewer rows than L0, L1, or L2 (e.g., subplot, or plot, treatment, species, etc.). 
-- The resolution of *L3 Data* is coarser than L1, L2, meaning each record is an aggregate measure of data at lower level.
+- *L2 Data* are derived data products that are aggregated L1 Data to a summary statistic (e.g., mean, variation) or a metric (e.g., diversity measure for plant community data). Aggregation is by a group or treatment and results in some coarser level L2 data product that usually results in fewer rows than the corresponding L0, L1 (e.g., subplot, or plot, treatment, species, etc.). 
+- The **resolution** of *L2 Data* is coarser than L0, L1, meaning each record is an aggregate measure of data at lower level.
+- The L2 folder in this repository contains scripts to convert L1 data to L2 data. 
 
 
 ## Analysis
