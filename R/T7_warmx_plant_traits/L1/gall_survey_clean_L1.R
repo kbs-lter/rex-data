@@ -24,6 +24,7 @@ list.files(dir)
 galls <- read.csv(file.path(dir, "T7_warmx_plant_traits/L0/T7_warmx_gall_survey_L0.csv"))
 
 str(galls)
+unique(galls$treatment)
 
 galls <- galls %>% select(-notes) # get rid of "notes" column
 
