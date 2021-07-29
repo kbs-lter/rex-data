@@ -6,8 +6,6 @@
 # PROJECT:        REX
 # DATE:           July 2021
 
-# Notes: two records for 53D (drought) - i think one is supposed to be irr_control. check with hard copy
-# "control" should be "ambient control" for 41C
 
 # Clear all existing data
 rm(list=ls())
