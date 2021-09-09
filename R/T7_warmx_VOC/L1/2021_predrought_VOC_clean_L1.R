@@ -1,4 +1,4 @@
-# TITLE:          REX: VOC data clean-up
+# TITLE:          REX: 2021 VOC pre-drought data clean-up
 # AUTHORS:        Kara Dobson
 # COLLABORATORS:  Phoebe Zarnetske, Moriah Young, Mark Hammond
 # DATA INPUT:     Data imported as csv files from shared REX Google drive T7_warmx_VOC L0 folder
