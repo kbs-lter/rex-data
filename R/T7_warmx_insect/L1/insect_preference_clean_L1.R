@@ -17,7 +17,7 @@ dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
 
 # Read in data
-insects <- read.csv(file.path(dir, "T7_warmx_insect/L0/2021/T7_warmx_insect_preference_L0.csv"))
+insects <- read.csv(file.path(dir, "T7_warmx_insect/L0/T7_warmx_insect_preference_2021_L0.csv"))
 
 View(insects)
 str(insects)
@@ -25,5 +25,5 @@ summary(insects$sla_before)
 summary(insects$sla_after)
 
 # Upload cleaned data to L1 folder
-write.csv(insects, file.path(dir,"T7_warmx_insect/L1/T7_warmx_insect_preference_L1.csv"), row.names=F)
+write.csv(insects, file.path(dir,"T7_warmx_insect/L1/T7_warmx_insect_preference_2021_L1.csv"), row.names=F)
 
