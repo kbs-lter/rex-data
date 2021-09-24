@@ -22,6 +22,7 @@ insects <- read.csv(file.path(dir, "T7_warmx_insect/L0/T7_warmx_insect_preferenc
 View(insects)
 str(insects)
 summary(insects$sla_before)
+
 summary(insects$sla_after)
 
 # Upload cleaned data to L1 folder
