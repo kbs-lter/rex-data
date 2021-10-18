@@ -103,5 +103,47 @@ Below are lists of parent folders in this repository that match the same folder 
 - The L2 folder in this repository contains scripts to convert L1 data to L2 data. 
 
 
+## Code names
+**Treatment**:	
+Conventional ag	T1
+Continuous no-till	T2
+Early successional	T7
+	
+**Replicates**:	R1-6
+	
+**Footprint location**:	1-5
+	
+**Footprint**:	
+Y1 Drought (soy)	D1
+Y2 Drought (wheat)	D2
+Y3 Drought (corn)	D3
+Variable Rainfall	VR
+Control (irrigated)	IR
+OTC under rainout	OR
+OTC controls (ambient)	OC
+	
+**Subplot location**:	locations are always lower-case
+Northwest	a
+Northeast	b
+Southwest	c
+Southeast	d
+	
+**Subplot**:	
+Control	C
+Sorghum	S
+Switchgrass	G
+Biochar	B
+Fungicide	F
+Nematicide	N
+Insecticide	I
+Warming	W
+Insecticide + Warming	X
+	
+**Sample types**	
+Fresh soil	S
+Flash-frozen soil	F
+Leaf tissue	L
+
+
 ## Analysis
 All analyses (including most plots) are performed in the separate repository: https://github.com/kbs-lter/rex-analysis
