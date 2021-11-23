@@ -111,7 +111,7 @@ Below are lists of parent folders in this repository that match the same folder 
 	
 **Replicates**:	R1-6
 	
-**Footprint location**:	1-5
+**Footprint locations**:	1-5
 	
 **Footprint**:	
 - Y1 Drought (soy)	D1
