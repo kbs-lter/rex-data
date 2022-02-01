@@ -155,4 +155,4 @@ galls_pre4 <- galls_pre4 %>% dplyr::select(-plant_num)
 both_gall <- rbind(galls_pre4, gall_merge_distinct)
 
 # Upload cleaned data to L1 folder
-write.csv(both_gall, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_gall_vol_L1.csv"), row.names=F)
+write.csv(both_gall, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_Soca_gall_vol_L1.csv"), row.names=F)
