@@ -88,4 +88,5 @@ data <- left_join(comb_data, taxon, by = c("Species_Code"))
 data = subset(data, select = -c(code, USDA_code, site, old_name, old_code, resolution, note1, note2))
 
 # upload L1 data
-write.csv(data, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_20121_L1.csv"), row.names=F)
+write.csv(data, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2021_L1.csv"), row.names=F)
+
