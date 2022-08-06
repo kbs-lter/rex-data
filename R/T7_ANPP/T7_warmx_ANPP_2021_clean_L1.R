@@ -20,7 +20,7 @@ list.files(dir)
 plz_plots <- read.csv(file.path(dir, "T7_ANPP/L0/Phoebe_KBS_LTER_REX_2021_ANPP_PZ_footprints_only.csv"))
 jen_plots <- read.csv(file.path(dir, "T7_ANPP/L0/LTER_T7_REX_ANPP_LAU_2021_MHfinal_L0.csv"))
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
-taxon <- read.csv(file.path(dir, "REX_warmX_taxon.csv"))
+taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
 # For Zarnetske Lab purposes, we only are analyzing five treatments in REX:
 # warmed, drought, warmed + drought, ambient control, and irrigated control
@@ -50,7 +50,7 @@ str(plz_plots)
 str(meta)
 
 # removing columns we don't need
-meta = subset(meta, select = -c(Footprint,Subplot,Unique_ID))
+meta = subset(meta, select = -c(Footprint,Subplot))
 plz_plots = subset(plz_plots, select = -c(X,X.1,Notes))
 
 # merging PLZ data with metadata
@@ -70,7 +70,11 @@ irr_control$Footprint_Location[irr_control$Footprint_Location == "F2"] = 2
 irr_control$Footprint_Location[irr_control$Footprint_Location == "F3"] = 3
 irr_control$Footprint_Location[irr_control$Footprint_Location == "F4"] = 4
 irr_control$Footprint_Location[irr_control$Footprint_Location == "F6"] = 6
-irr_control$Subplot_Descriptions[irr_control$Subplot_Descriptions == "Control (irrigated)_Control"] = "irrigated"
+irr_control$Subplot_Descriptions[irr_control$Subplot_Descriptions == "Control (irrigated)_Control"] = "irrigated_control"
+
+# merging irrigated control data with metadata
+irr_control <- merge(irr_control, meta, by = c("Treatment","Replicate","Footprint_Location","Subplot_Location", 
+                                               "Subplot_Descriptions"))
 
 # combining irr. control & PLZ data into one dataframe
 comb_data <- rbind(plz_data,irr_control)
@@ -84,4 +88,4 @@ data <- left_join(comb_data, taxon, by = c("Species_Code"))
 data = subset(data, select = -c(code, USDA_code, site, old_name, old_code, resolution, note1, note2))
 
 # upload L1 data
-write.csv(data, file.path(dir,"T7_ANPP/L1/T7_Zarnetske_ANPP_L1.csv"), row.names=F)
+write.csv(data, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_20121_L1.csv"), row.names=F)
