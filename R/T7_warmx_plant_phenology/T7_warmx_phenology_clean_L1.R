@@ -53,4 +53,12 @@ phen1$Date[phen1$Date == "2019-06-21"] <- "2021-06-21"
 
 phen1 <- phen1[,-1] # delete unnecessary columns
 
-phen2 <- phen1[,c(6, 7, 1, 2, 8, 9, 11, 10, 4, 5, 3)]
+phen1[["Date"]] <- as.Date(phen1[["Date"]],format="%m/%d/%Y")
+
+# make a column for Julian date
+phen1$Julian <- format(phen1$Date, "%j")
+
+phen2 <- phen1[,c(6, 7, 1, 2, 8, 9, 11, 10, 4, 5, 3, 12)]
+
+# upload L1 data
+write.csv(phen2, file.path(dir,"T7_plant_phenology/L1/T7_warmx_plant_phenology_2021_L1.csv"), row.names=F)
