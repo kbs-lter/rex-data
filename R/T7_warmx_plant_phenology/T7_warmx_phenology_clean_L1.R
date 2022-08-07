@@ -1,10 +1,10 @@
-# TITLE:          REX: Phoebe's plots flowering
+# TITLE:          REX: warmx Phenology - flowering and seed set cleaning
 # AUTHORS:        Moriah Young
 # COLLABORATORS:  Kara Dobson, Phoebe Zarnetske, Mark Hammond, 
-# DATA INPUT:     Data imported as csv files from shared REX Google drive T7_ANPP L0 folder
-# DATA OUTPUT:    Clean L1 data uploaded to T7_ANPP L1 folder
+# DATA INPUT:     Data imported as csv files from shared REX Google drive T7_warmx_plant_phenology L0 folder
+# DATA OUTPUT:    Clean L1 data uploaded to T7_warmx_plant_phenology L1 folder
 # PROJECT:        REX
-# DATE:           June 2022
+# DATE:           August 2022
 
 # Clear all existing data
 rm(list=ls())
