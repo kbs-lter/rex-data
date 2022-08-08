@@ -52,10 +52,13 @@ unique(sort(phen_all[["Subplot_Descriptions"]])) # check for any misspellings
 phen_all$Action[phen_all$Action == "FLower"] <- "Flower"
 phen_all$Action[phen_all$Action == "Flwr"] <- "Flower"
 phen_all$Action[phen_all$Action == "Flwr/Fr"] <- "Flower"
+phen_all$Action[phen_all$Action == "Fr"] <- "Seed"
 
 # change species names
 phen_all$Code[phen_all$Code == "Tprr"] <- "Trpr"
 phen_all$Code[phen_all$Code == "Tpr"] <- "Trpr"
+phen_all$Code[phen_all$Code == "Tp"] <- "Trpr"
+phen_all$Code[phen_all$Code == "Silene Alba"] <- "Sila"
 
 # change any weird dates
 phen_all$Date[phen_all$Date == "0202-06-08"] <- "2022-06-08"

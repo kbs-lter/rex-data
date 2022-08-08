@@ -58,8 +58,20 @@ unique(sort(plantcomp[["Date"]])) # check that there are no weird dates
 plantcomp$Code[plantcomp$Code == "Brin "] <- "Brin"
 plantcomp$Code[plantcomp$Code == "Hisp "] <- "Hisp"
 plantcomp$Code[plantcomp$Code == "Trp"] <- "Trpr"
-plantcomp$Code[plantcomp$Code == "SOil/Char"] <- "Soil/Char"
-plantcomp$Code[plantcomp$Code == "Soil "] <- "Soil"
+plantcomp$Code[plantcomp$Code == "SOil/Char"] <- "soil_char"
+plantcomp$Code[plantcomp$Code == "Soil/Char"] <- "soil_char"
+plantcomp$Code[plantcomp$Code == "Soil "] <- "soil_char"
+plantcomp$Code[plantcomp$Code == "Total Live"] <- "total_living"
+plantcomp$Code[plantcomp$Code == "Total No Live"] <- "total_non_living"
+plantcomp$Code[plantcomp$Code == "Standing Dead"] <- "standing_dead"
+plantcomp$Code[plantcomp$Code == "Std Dead"] <- "standing_dead"
+plantcomp$Code[plantcomp$Code == "Small Leaf Desp"] <- "Desp"
+plantcomp$Code[plantcomp$Code == "Large Leaf Desp"] <- "Desp"
+plantcomp$Code[plantcomp$Code == "litter"] <- "Litter"
+plantcomp$Code[plantcomp$Code == "Tarof"] <- "Taof"
+plantcomp$Code[plantcomp$Code == "Silene Alba"] <- "Sila"
+plantcomp$Code[plantcomp$Code == "Celorb"] <- "Ceor"
+plantcomp$Code[plantcomp$Code == "alfalfa"] <- "Mesa"
 
 # combine meta data with plant comp dataframe
 plantcomp1 <- merge(plantcomp, meta, by=(c("Rep", "Footprint_Location", "Subplot_Location")))
