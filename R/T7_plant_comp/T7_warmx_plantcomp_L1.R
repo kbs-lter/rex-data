@@ -64,4 +64,4 @@ plantcomp1$Julian <- format(plantcomp1$Date, "%j")
 plantcomp1 <- plantcomp1[,c(6, 7, 1, 2, 8, 9, 11, 10, 4, 5, 3, 12)]
 
 # upload L1 data
-write.csv(plantcomp22, file.path(dir,"T7_plant_comp/L1/T7_warmx_plantcomp_L1.csv"), row.names=F)
+write.csv(plantcomp1, file.path(dir,"T7_plant_comp/L1/T7_warmx_plantcomp_L1.csv"), row.names=F)
