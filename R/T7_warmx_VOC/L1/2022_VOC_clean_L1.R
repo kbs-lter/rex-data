@@ -6,13 +6,6 @@
 # PROJECT:        REX
 # DATE:           Aug 2022
 
-# Notes:
-# everything is normalized by internal standard
-# next steps:
-  # Figure out best way to remove background sample noise from bags
-  # idea for this: in normalized dataframe, subtract average bag value sample for each compound (except decane)
-
-
 
 # Clear all existing data
 rm(list=ls())
@@ -37,18 +30,10 @@ voc$Annotations <- NULL
 
 # checking what samples don't have decane - going back to remove 45, 106, 119, 126, and 127
 # these samples are removed in the L0_2 version
-# removing 45 from L1 version
+# removing 45 from L0 version
 voc_dec <-  voc %>%
   filter(Compound == "Decane")
 voc = subset(voc, select = -c(A_071822_045) )
-
-# skipping this part for now
-# get average values for the air control
-#voc$bag <- rowMeans(subset(voc, select = c(A_071822_128, A_071822_129, A_071822_130)), na.rm = TRUE)
-
-# subtract average air control values from each sample
-#voc2 <- voc %>%
-#  mutate_at(vars(-matches('Compound')), ~ . - bag)
 
 # get compound names & remove them from voc dataframe
 voc_cmpd <- voc[,1, drop=FALSE]
@@ -61,9 +46,6 @@ voc2[] <- lapply(voc2, as.integer)
 
 # remerge compound names
 voc_bind <- cbind(voc_cmpd, voc2)
-
-# remove air control columns
-#voc_bind = subset(voc_bind, select = -c(bag, A_071822_128, A_071822_129, A_071822_130))
   
 # convert data format so each row is a sample, each column is a compoud
 voc_transpose = as.data.frame(t(voc_bind))
@@ -95,6 +77,47 @@ voc_bind2 <- cbind(voc_cmpd2, voc_norm)
 names(voc_bind2)[names(voc_bind2) == 'Compound'] <- 'Sample_ID'
 voc_merge3 <- left_join(voc_bind2, meta, by="Sample_ID")
 
+# removing decane as its the standard
+voc_merge3 = subset(voc_merge3, select = -c(Decane))
 
-# Upload cleaned data to L1 folder
-write.csv(voc_merge2, file.path(dir,"T7_warmx_VOC/L1/T7_VOC_2022_L1.csv"), row.names=F)
+# removing background noise data from the samples
+# subtracting the compound amounts found in the bag from all samples of the same rep
+voc_sub1 <- voc_merge3 %>%
+  filter(Rep == 1) %>%
+  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+voc_sub2 <- voc_merge3 %>%
+  filter(Rep == 2) %>%
+  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+voc_sub3 <- voc_merge3 %>%
+  filter(Rep == 3) %>%
+  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+voc_sub4 <- voc_merge3 %>%
+  filter(Rep == 4) %>%
+  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+voc_sub5 <- voc_merge3 %>%
+  filter(Rep == 5) %>%
+  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+
+voc_sub <- rbind(voc_sub1,voc_sub3,voc_sub5,voc_sub4,voc_sub2)
+
+# removing bag samples
+voc_sub <- voc_sub[!grepl('A_071822_126',voc_sub$Sample_ID),]
+voc_sub <- voc_sub[!grepl('A_071822_127',voc_sub$Sample_ID),]
+voc_sub <- voc_sub[!grepl('A_071822_128',voc_sub$Sample_ID),]
+voc_sub <- voc_sub[!grepl('A_071822_129',voc_sub$Sample_ID),]
+voc_sub <- voc_sub[!grepl('A_071822_130',voc_sub$Sample_ID),]
+
+# make all negative values 0
+voc_sub[voc_sub < 0] <- 0
+
+# Upload cleaned data with all compounds to L1 folder
+write.csv(voc_sub, file.path(dir,"T7_warmx_VOC/L1/T7_total_VOC_2022_L1.csv"), row.names=F)
+
+
+# removing unnamed compounds from dataframe
+voc_named <- voc_sub %>%
+  select(-contains(c("@")))
+
+# Upload cleaned data with named compounds to L1 folder
+write.csv(voc_named, file.path(dir,"T7_warmx_VOC/L1/T7_named_VOC_2022_L1.csv"), row.names=F)
+
