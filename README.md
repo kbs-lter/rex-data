@@ -15,7 +15,7 @@ Jennifer Lau (Indiana University)
 
 Steve Hamilton (MSU, KBS)
 
-Christine Sprunger (Ohio State)
+Christine Sprunger (MSU, KBS)
 
 Phoebe Zarnetske (MSU)
 
