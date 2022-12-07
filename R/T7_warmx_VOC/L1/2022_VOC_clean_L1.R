@@ -35,6 +35,15 @@ voc_dec <-  voc %>%
   filter(Compound == "Decane")
 voc = subset(voc, select = -c(A_071822_045) )
 
+# checking decane abundance over time (i.e., over each sample)
+# does decane abundance decrease as samples increase?
+voc_dec2 <- voc_dec %>%
+  pivot_longer(names_to = "sample", values_to = "abundance", cols = -Compound)
+hist(voc_dec2$abundance)
+ggplot(voc_dec2,aes(x=sample, y=abundance)) +
+  geom_bar(stat = "identity")
+# it looks like at 038 things change - abundance declines for decane
+
 # get compound names & remove them from voc dataframe
 voc_cmpd <- voc[,1, drop=FALSE]
 voc2 = subset(voc, select = -c(Compound))
@@ -59,17 +68,17 @@ voc_transpose[] <- lapply(voc_transpose, function(x) type.convert(as.character(x
 # removing caprolactam as its contamination from the nylon bag
 voc_merge = subset(voc_transpose, select = -c(Caprolactam))
 
-# removing compounds that are present only in 1 sample
+# removing compounds that are present only in 3 samples
 #voc_merge2 <- voc_merge[,colSums(voc_merge!=0)>1]
 voc_merge2 <- voc_merge %>%
-  select(where(~ sum(.x != 0, na.rm = TRUE) > 1))
+  select(where(~ sum(.x != 0, na.rm = TRUE) > 3))
 
 # normalize by internal standard
 # first remove compound name column & meta info columns
 voc_cmpd2 <- voc_merge2[,1, drop=FALSE]
 voc_merge2 = subset(voc_merge2, select = -c(Compound))
 # perform normalization
-voc_norm <- voc_merge2/voc_merge2[,1087]
+voc_norm <- voc_merge2/voc_merge2[,552] # this changes if I change sample number above (1087 if 1 sample, 552 if 3)
 # remerge compound names
 voc_bind2 <- cbind(voc_cmpd2, voc_norm)
 
@@ -84,19 +93,19 @@ voc_merge3 = subset(voc_merge3, select = -c(Decane))
 # subtracting the compound amounts found in the bag from all samples of the same rep
 voc_sub1 <- voc_merge3 %>%
   filter(Rep == 1) %>%
-  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+  mutate_at(2:725, funs(c(last(.), (. - last(.))[-1])) )
 voc_sub2 <- voc_merge3 %>%
   filter(Rep == 2) %>%
-  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+  mutate_at(2:725, funs(c(last(.), (. - last(.))[-1])) )
 voc_sub3 <- voc_merge3 %>%
   filter(Rep == 3) %>%
-  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+  mutate_at(2:725, funs(c(last(.), (. - last(.))[-1])) )
 voc_sub4 <- voc_merge3 %>%
   filter(Rep == 4) %>%
-  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+  mutate_at(2:725, funs(c(last(.), (. - last(.))[-1])) )
 voc_sub5 <- voc_merge3 %>%
   filter(Rep == 5) %>%
-  mutate_at(2:1493, funs(c(last(.), (. - last(.))[-1])) )
+  mutate_at(2:725, funs(c(last(.), (. - last(.))[-1])) )
 
 voc_sub <- rbind(voc_sub1,voc_sub3,voc_sub5,voc_sub4,voc_sub2)
 
