@@ -19,7 +19,7 @@ list.files(dir)
 # Read in data
 anpp_data <- read.csv(file.path(dir, "T7_ANPP/L0/2022 All footprints/REX_ANPP_2022_biomass_final.csv"))
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
-taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
+taxon <- read.csv(file.path(dir, "REX_warmx_taxon - REX_warmx_taxon.csv"))
 
 # Making meta-data file match the format of the ANPP data
 meta$Treatment <- 7
@@ -43,7 +43,28 @@ anpp = subset(anpp, select = -c(Footprint_Owner, Replicate, Footprint, Subplot,U
 # making all species capitalized
 anpp$Species_Code = toupper(anpp$Species_Code)
 
-# adding together live and dead clover measurements
+## adding together live and dead clover measurements
+# first, renaming all clover to "TRFPR"
+anpp$Species_Code[anpp$Species_Code == "TRFPR (ALIVE)"] <- "TRFPR"
+anpp$Species_Code[anpp$Species_Code == "TRFPR (DEAD)"] <- "TRFPR"
 
+# calculate sums of alive and dead
+anpp_sum <- anpp %>%
+  group_by(Field_Loc_Code) %>%
+  filter(Species_Code == "TRFPR") %>%
+  mutate(Dried_Plant_Biomass_gram = sum(Dried_Plant_Biomass_gram)) %>%
+  distinct(Field_Loc_Code, .keep_all = TRUE)
 
+# remove clover from original anpp data
+anpp <- anpp %>%
+  filter(!(Species_Code == "TRFPR"))
 
+# merge summed TRFPR with anpp data
+anpp2 <- bind_rows(anpp, anpp_sum)
+
+# merging species info with anpp data
+names(taxon)[names(taxon)=="LTER_code"] <- "Species_Code" # making species column the same name
+anpp3 <- left_join(anpp2, taxon, by = c("Species_Code"))
+
+# upload L1 data
+write.csv(anpp3, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)
