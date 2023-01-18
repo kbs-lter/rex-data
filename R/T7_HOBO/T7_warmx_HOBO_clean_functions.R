@@ -11,11 +11,19 @@ add_treat <- function(df, trt) {
   return(df)
 }
 
+# adding rep column to the data
+add_rep <- function(df, rep) {
+  df$Rep <- rep
+  return(df)
+}
+
 # change column names
 col_names <- function(df){
   colnames(df) <- sub("Date.Time..EST.EDT.", "Date_Time", colnames(df))
   colnames(df) <- sub("Ch..1...Temperature.....C..", "Temperature_C", colnames(df))
   colnames(df) <- sub("Ch..2...Light....lux.", "Light_lux", colnames(df))
+  colnames(df) <- sub("Date-Time (EST/EDT)", "Date_Time", colnames(df))
+  colnames(df) <- sub("Ch..1...Temperature", "Temperature_C", colnames(df))
   return(df)
 }
 
