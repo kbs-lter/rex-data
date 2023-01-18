@@ -67,10 +67,10 @@ df_list <- lapply(df_list, col_names)
 df_list <- lapply(df_list, change_POSIX)
 
 # merge into one dataframe
-hobo_data <- rbind(df_list$r2_a,df_list$r3_a,df_list$r4_a,df_list$r6_a,
-                   df_list$r2_w,df_list$r3_w,df_list$r6_w,
-                   df_list$r3_d,df_list$r4_d,df_list$r6_d,
-                   df_list$r2_wd,df_list$r3_wd,df_list$r4_wd,df_list$r6_wd)
+hobo_data <- rbind(df_list$r1_a,df_list$r2_a,df_list$r3_a,df_list$r4_a,df_list$r5_a,df_list$r6_a,
+                   df_list$r1_w,df_list$r2_w,df_list$r3_w,df_list$r4_w,df_list$r5_w,df_list$r6_w,
+                   df_list$r2_d,df_list$r3_d,df_list$r4_d,df_list$r5_d,df_list$r6_d,
+                   df_list$r2_wd,df_list$r3_wd,df_list$r4_wd,df_list$r5_wd,df_list$r6_wd)
 
 # upload to drive
 write.csv(hobo_data, file.path(dir,"sensors/Phoebe Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
