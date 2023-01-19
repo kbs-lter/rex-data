@@ -1,4 +1,4 @@
-# TITLE:          REX: Phoebe's plots ANPP
+# TITLE:          REX: T7 plots ANPP
 # AUTHORS:        Kara Dobson, Moriah Young
 # COLLABORATORS:  Phoebe Zarnetske, Mark Hammond, Jordan Zapata
 # DATA INPUT:     Data imported as csv files from shared REX Google drive T7_ANPP L0 folder
@@ -18,12 +18,12 @@ list.files(dir)
 
 # Read in data
 anpp_data <- read.csv(file.path(dir, "T7_ANPP/L0/2022 All footprints/REX_ANPP_2022_biomass_final.csv"))
-meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
+meta <- read.csv(file.path(dir, "REX_T7_metadata.csv"))
 taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
 # Making meta-data file match the format of the ANPP data
 meta$Treatment <- 7
-meta$Field_Loc_Code <- paste0(meta$Treatment, "_", meta$Rep, "_", meta$Footprint_Location, "_", meta$Subplot_Location)
+meta$Field_Loc_Code <- paste0(meta$Treatment, "_", meta$Rep, "_", meta$FP_location, "_", meta$Subplot_location)
 
 # removing unneeded columns in ANPP
 anpp_data = subset(anpp_data, select = -c(Date_of_Harvest,Field_Treatment_Number,Field_Rep,Footprint_Number,Subplot_Letter,
@@ -33,12 +33,8 @@ anpp_data = subset(anpp_data, select = -c(Date_of_Harvest,Field_Treatment_Number
 # merging meta data with ANPP data
 anpp <- left_join(anpp_data, meta, by = c("Field_Loc_Code"))
 
-# subset out Phoebe's plots and the irrigated control
-anpp <- anpp %>%
-  filter(Footprint_Owner == "PZ" | Subplot_Descriptions == "irrigated_control")
-
 # removing unneeded columns
-anpp = subset(anpp, select = -c(Footprint_Owner, Replicate, Footprint, Subplot,Unique_ID))
+anpp = subset(anpp, select = -c(Footprint_Owner, Replicate, Unique_ID))
 
 # making all species capitalized
 anpp$Species_Code = toupper(anpp$Species_Code)
@@ -50,14 +46,14 @@ anpp$Species_Code[anpp$Species_Code == "TRFPR (DEAD)"] <- "TRFPR"
 
 # calculate sums of alive and dead
 anpp_sum <- anpp %>%
-  group_by(Field_Loc_Code) %>%
-  filter(Species_Code == "TRFPR") %>%
-  mutate(Dried_Plant_Biomass_gram = sum(Dried_Plant_Biomass_gram)) %>%
-  distinct(Field_Loc_Code, .keep_all = TRUE)
+        group_by(Field_Loc_Code) %>%
+        filter(Species_Code == "TRFPR") %>%
+        mutate(Dried_Plant_Biomass_gram = sum(Dried_Plant_Biomass_gram)) %>%
+        distinct(Field_Loc_Code, .keep_all = TRUE)
 
 # remove clover from original anpp data
 anpp <- anpp %>%
-  filter(!(Species_Code == "TRFPR"))
+        filter(!(Species_Code == "TRFPR"))
 
 # merge summed TRFPR with anpp data
 anpp2 <- bind_rows(anpp, anpp_sum)
@@ -73,7 +69,10 @@ anpp4 = subset(anpp3, select = -c(note1, note2))
 unique(anpp4$Species_Code)
 
 # check subplot descriptions
-unique(anpp4$Subplot_Descriptions)
-                                          
+unique(anpp4$Subplot_Description)
+
+# remove "SDEAD" and "SURFL" because these do not count towards ANPP
+
 # upload L1 data
-write.csv(anpp4, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)
+write.csv(anpp4, file.path(dir,"T7_ANPP/L1/T7_ANPP_2022_L1.csv"), row.names=F)
+
