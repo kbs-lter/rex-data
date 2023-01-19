@@ -74,6 +74,13 @@ unique(anpp4$Species_Code)
 
 # check subplot descriptions
 unique(anpp4$Subplot_Descriptions)
+
+# remove "SDEAD" and "SURFL" from original anpp data because this does not count towards ANPP
+anpp5 <- anpp4[!grepl('SDEAD',anpp4$Species_Code),]
+anpp6 <- anpp5[!grepl('SURFL',anpp5$Species_Code),]
+
+# check species code names again
+unique(anpp6$Species_Code)
                                           
 # upload L1 data
-write.csv(anpp4, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)
+write.csv(anpp6, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)
