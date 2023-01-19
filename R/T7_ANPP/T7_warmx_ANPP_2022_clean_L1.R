@@ -1,6 +1,6 @@
 # TITLE:          REX: Phoebe's plots ANPP
-# AUTHORS:        Kara Dobson
-# COLLABORATORS:  Phoebe Zarnetske, Moriah Young, Mark Hammond, Jordan Zapata
+# AUTHORS:        Kara Dobson, Moriah Young
+# COLLABORATORS:  Phoebe Zarnetske, Mark Hammond, Jordan Zapata
 # DATA INPUT:     Data imported as csv files from shared REX Google drive T7_ANPP L0 folder
 # DATA OUTPUT:    Clean L1 data uploaded to T7_ANPP L1 folder
 # PROJECT:        REX
@@ -19,7 +19,7 @@ list.files(dir)
 # Read in data
 anpp_data <- read.csv(file.path(dir, "T7_ANPP/L0/2022 All footprints/REX_ANPP_2022_biomass_final.csv"))
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
-taxon <- read.csv(file.path(dir, "REX_warmx_taxon - REX_warmx_taxon.csv"))
+taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
 # Making meta-data file match the format of the ANPP data
 meta$Treatment <- 7
@@ -66,5 +66,14 @@ anpp2 <- bind_rows(anpp, anpp_sum)
 names(taxon)[names(taxon)=="LTER_code"] <- "Species_Code" # making species column the same name
 anpp3 <- left_join(anpp2, taxon, by = c("Species_Code"))
 
+# remove unnecessary columns
+anpp4 = subset(anpp3, select = -c(note1, note2))
+
+# check species code names
+unique(anpp4$Species_Code)
+
+# check subplot descriptions
+unique(anpp4$Subplot_Descriptions)
+                                          
 # upload L1 data
 write.csv(anpp3, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)

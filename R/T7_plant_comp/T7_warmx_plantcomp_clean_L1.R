@@ -24,8 +24,6 @@ plantcomp22 <- read.csv(file.path(dir, "T7_plant_comp/L0/T7_warmx_plantcomp_2022
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
 taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
-plantcomp22 <- plantcomp22[-c(997:1006),] # delete rows with NAs
-
 # 2021 data
 greenup21 <- greenup21[,-c(1, 3, 5, 10)] # delete unnecessary columns
 names(greenup21)[names(greenup21)=="New_Footprint"] <- "Footprint_Location"
@@ -38,7 +36,7 @@ names(plantcomp21)[names(plantcomp21)=="Quad"] <- "Subplot_Location"
 names(plantcomp21)[names(plantcomp21)=="Species"] <- "Code"
 
 # 2022 data
-plantcomp22 <- plantcomp22[,-c(1, 3, 9, 10)] # delete unnecessary columns
+plantcomp22 <- plantcomp22[,-c(1, 3, 9, 10, 11)] # delete unnecessary columns
 names(plantcomp22)[names(plantcomp22)=="Footprint"] <- "Footprint_Location"
 names(plantcomp22)[names(plantcomp22)=="Quad"] <- "Subplot_Location"
 names(plantcomp22)[names(plantcomp22)=="Species"] <- "Code"
@@ -46,6 +44,11 @@ names(plantcomp22)[names(plantcomp22)=="Species"] <- "Code"
 # merge 2021 and 2022 data together
 plantcomp1 <-  full_join(plantcomp21, plantcomp22)
 plantcomp <-  full_join(plantcomp1, greenup21)
+
+# check that there aren't any misspellings
+unique(sort(plantcomp[["Date"]])) # check that there are no weird dates
+# correct date typos
+plantcomp$Date[plantcomp$Date == "3/24/20222"] <- "3/24/2022"
 
 plantcomp$Date <- mdy(plantcomp$Date) # change date to %m/%d/%Y format
 plantcomp[["Date"]] <- as.Date(plantcomp[["Date"]],format="%m/%d/%Y")
@@ -58,6 +61,7 @@ unique(sort(plantcomp[["Date"]])) # check that there are no weird dates
 plantcomp$Code[plantcomp$Code == "Brin "] <- "Brin"
 plantcomp$Code[plantcomp$Code == "Hisp "] <- "Hisp"
 plantcomp$Code[plantcomp$Code == "Trp"] <- "Trpr"
+plantcomp$Code[plantcomp$Code == "trpr"] <- "Trpr"
 plantcomp$Code[plantcomp$Code == "SOil/Char"] <- "soil_char"
 plantcomp$Code[plantcomp$Code == "Soil/Char"] <- "soil_char"
 plantcomp$Code[plantcomp$Code == "Soil "] <- "soil_char"
@@ -72,6 +76,10 @@ plantcomp$Code[plantcomp$Code == "Tarof"] <- "Taof"
 plantcomp$Code[plantcomp$Code == "Silene Alba"] <- "Sila"
 plantcomp$Code[plantcomp$Code == "Celorb"] <- "Ceor"
 plantcomp$Code[plantcomp$Code == "alfalfa"] <- "Mesa"
+plantcomp$Code[plantcomp$Code == "daca"] <- "Daca"
+plantcomp$Code[plantcomp$Code == "elre"] <- "Elre"
+plantcomp$Code[plantcomp$Code == "Toaf"] <- "Taof"
+plantcomp$Code[plantcomp$Code == "soca"] <- "Soca"
 
 # combine meta data with plant comp dataframe
 plantcomp1 <- merge(plantcomp, meta, by=(c("Rep", "Footprint_Location", "Subplot_Location")))
