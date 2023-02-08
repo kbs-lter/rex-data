@@ -26,24 +26,27 @@ names(soil)[names(soil)=="Plot.ID"] <- "Unique_ID"
 # merge both data frames by "Unique_ID"
 soil_1 <- left_join(soil, meta, by = "Unique_ID")
 
-# Exclude rows where Footprint_Treatment_full is NA:
+# Exclude rows where Footprint_Treatment_full is NA (non T7 footprints):
 soil_2 <- soil_1 %>% filter(!is.na(Footprint_Treatment_full))
+
+# check Subplot_Description names
+unique(soil_2$Subplot_Description)
+# check FB_Description names
+unique(soil_2$FP_treatment)
         
 # removing unneeded columns
 soil_3 <- subset(soil_2, select = -c(bag.wt, bag...wet.soil, bag...dry.soil, wet.soil..g., dry.soil..g., to_check, Notes, 
                                     who.has.fresh.soil.))
 
-warmx_1 <- soil_3 %>% filter(FP_treatment == c("IR", "OR", "OC"))
+# code below is to get a dataframe for just T7 warmx plots
+# select for irrigated control, OTCs under rainout shelters, and OTC control footprints
+warmx_1 <- soil_3 %>% filter(FP_treatment %in% c("IR", "OR", "OC"))
 
-warmx_2 <- warmx_1 %>% filter(Subplot_Description == c("ambient", "Control", "drought_insecticide", "insecticide", "warmed", 
-                                                    "warmed_drought", "warmed_drought_insecticide", "warmed_insecticide", 
-                                                    "drought"))
+# we want to filter out fungicide, nematicide, and sorghum subplot manipulations
+warmx_2 <- warmx_1 %>% filter(!Subplot_Description %in% c("Fungicide", "Nematicide", "Sorghum"))
 
 # upload L1 data
 write.csv(soil_3, file.path(dir,"soil/L1/T7_soil_moisture_2022_L1.csv"), row.names=F) # all T7s
 
-write.csv(warmx, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), row.names=F) # just warmx plots
-
-
-
+write.csv(warmx_2, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), row.names=F) # just warmx plots
 
