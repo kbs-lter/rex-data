@@ -182,13 +182,15 @@ qiime feature-classifier classify-sklearn --i-classifier classifier.qza --i-read
 qiime metadata tabulate \
   --m-input-file 16S-taxonomy.qza \
   --o-visualization 16S-taxonomy.qzv
+
+# testing the classifier and creating the .qzv file took 7 hours on the hpcc (using the same SLURM code/settings as the denoising script above)
   
 qiime metadata tabulate --m-input-file 16S-taxonomy.qza --o-visualization 16S-taxonomy.qzv
 ```
 
 # This did not work for me below - got this error:
 # The scikit-learn version (0.23.1) used to generate this artifact does not match the current version of scikit-learn installed (0.24.1). Please retrain your classifier for your current deployment to prevent data-corruption errors.
-# Taxonomically classify ASVs
+# Taxonomically classify ASVs on a pretrained classifier
 ```{bash}
 cd /mnt/home/youngmor/REX-soil
 qiime feature-classifier classify-sklearn \
@@ -201,7 +203,7 @@ conda install scikit-learn==0.23.1 # this didn't work
 qiime feature-classifier classify-sklearn --i-classifier silva-138-99-515-806-nb-classifier.qza --i-reads 16S-2021-merged-rep-seqs.qza --o-classification 16S-2021-taxonomy.qza --p-n-jobs 36
 ```
 
-# Generate a phylogenetic tree - needs editing
+# Generate a phylogenetic tree - needs editing, didn't do this yet
 ```{bash}
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences rep-seqs.qza \
