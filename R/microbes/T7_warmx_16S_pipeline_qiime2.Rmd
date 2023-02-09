@@ -103,7 +103,7 @@ qiime dada2 denoise-paired --i-demultiplexed-seqs 20221205_16SV4-2_PE250.qza\
 
 ```
 
-Create a .qzv file so you can check out the table from the denoising stats that was created from the job above?
+Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
 You can then drag and drop the .qzv file into this website: https://view.qiime2.org/ 
 You'll need to download it from the interactive interface onto your mac
 ```{bash}
@@ -124,7 +124,7 @@ qiime metadata tabulate \
 qiime metadata tabulate --m-input-file 20221205_16SV4-2_PE250-denoising-stats.qza --o-visualization 20221205_16SV4-2_PE250-denoising-stats.qzv
 ```
 
-# Merge all sequences into one file
+# Merge all the rep sequence outputs into one file
 ```{bash}
 cd /mnt/home/youngmor
 qiime feature-table merge-seqs \
@@ -135,16 +135,15 @@ qiime feature-table merge-seqs \
 qiime feature-table merge-seqs --i-data 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-rep-seqs.qza --i-data 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-rep-seqs.qza --o-merged-data 16S-2021-merged-rep-seqs.qza
 ```
 
-# Generate FeatureTable and FeatureData summaries - need to edit
+# Merge the dada2table outputs into one file
 ```{bash}
-qiime feature-table summarize \
---i-table table.qza \
---o-visualization table.qzv \
---m-sample-metadata-file MY_REX_soil_microbes_2021_metadata.tsv
+cd /mnt/home/youngmor
+qiime feature-table merge \
+  --i-tables 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-dada2table.qza \
+  --i-tables 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-dada2table.qza \
+  --o-merged-table 16S-2021-merged-dada2table.qza
 
-qiime feature-table tabulate-seqs \
---i-data 16S-2021-merged-rep-seqs.qza \
---o-visualization 16S-2021-merged-rep-seqs.qza
+qiime feature-table merge --i-tables 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-dada2table.qza --i-tables 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-dada2table.qza --o-merged-table 16S-2021-merged-dada2table.qza
 ```
 
 # Training a classifier
