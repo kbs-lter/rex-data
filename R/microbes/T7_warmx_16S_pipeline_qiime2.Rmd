@@ -101,6 +101,7 @@ qiime dada2 denoise-paired --i-demultiplexed-seqs 20221205_16SV4-2_PE250.qza\
 --o-representative-sequences 20221205_16SV4-2_PE250-rep-seqs.qza \
 --o-denoising-stats 20221205_16SV4-2_PE250-denoising-stats.qza \
 
+# save these files!
 ```
 
 Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
@@ -210,5 +211,35 @@ qiime phylogeny align-to-tree-mafft-fasttree \
   --o-masked-alignment masked-aligned-rep-seqs.qza \
   --o-tree unrooted-tree.qza \
   --o-rooted-tree rooted-tree.qza
+```
+
+# create mapping/metadata file
+```{r}
+# read in data
+seq_metadata <- read.csv("/Users/moriahyoung/Downloads/metadata.csv")
+microbe_metadata <- read.csv("/Users/moriahyoung/Downloads/MY_REX_soil_microbes_2021_metadata.csv")
+warmx_metadata <- read.csv("/Users/moriahyoung/Downloads/REX_warmx_metadata.csv")
+
+# merge files above
+seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
+bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
+                                      "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
+
+# reorder columns
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence",
+                                                       "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep",
+                                                       "Footprint_Treatment_full", "Footprint", "Footprint_Location",
+                                                       "Subplot", "Subplot_Location", "Subplot_Descriptions",
+                                                       "Unique_ID", "Drought", "Datetime_UTC")]
+
+colnames(bacterial_2021_metadata)[1] <- "sampleid"
+
+# get rid of controls
+bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
+bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+
+# write a new csv with the cleaned and merge data 
+write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.csv", row.names = F)
+write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = ",", row.names = F)
 ```
 
