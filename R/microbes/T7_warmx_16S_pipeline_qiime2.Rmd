@@ -206,6 +206,8 @@ qiime feature-classifier classify-sklearn --i-classifier silva-138-99-515-806-nb
 # Generate a phylogenetic tree
 ```{bash}
 cd /mnt/home/youngmor/REX-soil
+
+# this aligns your sequences
 qiime alignment mafft \
   --i-sequences 16S-2021-merged-rep-seqs.qza \
   --o-alignment 16S-2021-aligned-rep-seqs.qza
@@ -218,6 +220,8 @@ qiime alignment mask \
   
 qiime alignment mask --i-alignment 16S-2021-aligned-rep-seqs.qza --o-masked-alignment 16S-2021-masked-aligned-rep-seqs.qza
 
+# make the tree
+# using RAXML
 qiime phylogeny raxml \
   --i-alignment 16S-2021-masked-aligned-rep-seqs.qza \
   --p-substitution-model GTRCAT \
@@ -225,6 +229,16 @@ qiime phylogeny raxml \
   --verbose
   
 qiime phylogeny raxml --i-alignment 16S-2021-masked-aligned-rep-seqs.qza --p-substitution-model GTRCAT --o-tree 16S-2021-raxml-cat-tree.qza --verbose
+
+OR 
+# using fasttree
+# this worked better for me and it was fast
+qiime phylogeny fasttree \
+  --i-alignment 16S-2021-masked-aligned-rep-seqs.qza \
+  --o-tree 16S-2021-fasttree-tree.qza
+  --verbose
+  
+qiime phylogeny fasttree --i-alignment 16S-2021-masked-aligned-rep-seqs.qza --o-tree 16S-2021-fasttree-tree.qza --verbose
 ```
 
 # create mapping/metadata file
