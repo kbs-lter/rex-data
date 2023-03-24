@@ -19,7 +19,7 @@ list.files(dir)
 # Read in data
 anpp_data <- read.csv(file.path(dir, "T7_ANPP/L0/2022 All footprints/REX_ANPP_2022_biomass_final.csv"))
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
-taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
+taxon <- read.csv(file.path(dir, "REX_warmx_taxon - REX_warmx_taxon.csv"))
 
 # Making meta-data file match the format of the ANPP data
 meta$Treatment <- 7
@@ -81,6 +81,12 @@ anpp6 <- anpp5[!grepl('SURFL',anpp5$Species_Code),]
 
 # check species code names again
 unique(anpp6$Species_Code)
+
+# removing unneeded columns
+anpp6 = subset(anpp6, select = -c(resolution, old_code,old_name,site,code,USDA_code))
+
+# rename column
+colnames(anpp6)[which(names(anpp6) == "Dried_Plant_Biomass_gram")] <- "Dried_Plant_Biomass_g"
                                           
 # upload L1 data
 write.csv(anpp6, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_2022_L1.csv"), row.names=F)
