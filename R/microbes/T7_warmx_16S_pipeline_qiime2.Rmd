@@ -204,6 +204,7 @@ qiime feature-classifier classify-sklearn --i-classifier silva-138-99-515-806-nb
 ```
 
 # Generate a phylogenetic tree
+https://docs.qiime2.org/2023.2/tutorials/phylogeny/#root-the-phylogeny
 ```{bash}
 cd /mnt/home/youngmor/REX-soil
 
@@ -221,24 +222,28 @@ qiime alignment mask \
 qiime alignment mask --i-alignment 16S-2021-aligned-rep-seqs.qza --o-masked-alignment 16S-2021-masked-aligned-rep-seqs.qza
 
 # make the tree
-# using RAXML
-qiime phylogeny raxml \
-  --i-alignment 16S-2021-masked-aligned-rep-seqs.qza \
-  --p-substitution-model GTRCAT \
-  --o-tree 16S-2021-raxml-cat-tree.qza \
-  --verbose
-  
-qiime phylogeny raxml --i-alignment 16S-2021-masked-aligned-rep-seqs.qza --p-substitution-model GTRCAT --o-tree 16S-2021-raxml-cat-tree.qza --verbose
-
-OR 
 # using fasttree
-# this worked better for me and it was fast
 qiime phylogeny fasttree \
   --i-alignment 16S-2021-masked-aligned-rep-seqs.qza \
-  --o-tree 16S-2021-fasttree-tree.qza
+  --o-tree 16S-2021-fasttree-unrooted-tree.qza
   --verbose
   
 qiime phylogeny fasttree --i-alignment 16S-2021-masked-aligned-rep-seqs.qza --o-tree 16S-2021-fasttree-tree.qza --verbose
+
+#root the tree using the longest root
+qiime phylogeny midpoint-root \
+  --i-tree 16S-2021-fasttree-unrooted-tree.qza \
+  --o-rooted-tree 16S-2021-fasttree-rooted-tree.qza
+
+qiime phylogeny midpoint-root --i-tree 16S-2021-fasttree-unrooted-tree.qza --o-rooted-tree 16S-2021-fasttree-rooted-tree.qza
+
+
+# code below worth trying in the future - I think it's supposed to do all the steps above
+------------
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs.qza \
+  --output-dir mafft-fasttree-output
+-------------
 ```
 
 # create mapping/metadata file
