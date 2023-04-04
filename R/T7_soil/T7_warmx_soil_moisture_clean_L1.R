@@ -38,6 +38,9 @@ unique(soil_2$FP_treatment)
 soil_3 <- subset(soil_2, select = -c(bag.wt, bag...wet.soil, bag...dry.soil, wet.soil..g., dry.soil..g., to_check, Notes, 
                                     who.has.fresh.soil.))
 
+# rename "comments" column to "time_of_sampling"
+colnames(soil_3)[colnames(soil_3) == "comments"] = "time_of_sampling"
+
 # code below is to get a dataframe for just T7 warmx plots
 # select for irrigated control, OTCs under rainout shelters, and OTC control footprints
 warmx_1 <- soil_3 %>% filter(FP_treatment %in% c("IR", "OR", "OC"))
