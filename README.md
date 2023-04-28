@@ -37,7 +37,7 @@ Data location = “KBS_LTER_REX/Data” Google Shared Drive (accessible by proje
 
 
 ## Workflow
-We are following the Environmental Data Initiative’s (EDI; https://environmentaldatainitiative.org/) data management guidelines for analysis-ready data: https://environmentaldatainitiative.org/dataset-design/.
+We are following the Environmental Data Initiative’s (EDI; https://edirepository.org/) data management guidelines for analysis-ready data: https://environmentaldatainitiative.org/dataset-design/.
 
 ![EDI Workflow Diagram](https://environmentaldatainitiative.files.wordpress.com/2019/04/harmonization_procedure_general.png)
 
