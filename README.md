@@ -39,7 +39,7 @@ Data location = “KBS_LTER_REX/Data” Google Shared Drive (accessible by proje
 ## Workflow
 We are following the Environmental Data Initiative’s (EDI; https://edirepository.org/) data management guidelines for analysis-ready data: https://environmentaldatainitiative.org/dataset-design/.
 
-![EDI Workflow Diagram](https://environmentaldatainitiative.files.wordpress.com/2019/04/harmonization_procedure_general.png)
+![EDI Workflow Diagram](https://ars.els-cdn.com/content/image/1-s2.0-S1574954121001655-gr1.jpg)
 
 In this repository, R scripts are used to convert L0 Data to L1 Data, L1 Data to L2 Data, etc. (these are Step 1, Step 2 in figure above). 
 
