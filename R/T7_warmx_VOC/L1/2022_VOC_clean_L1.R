@@ -45,6 +45,7 @@ ggplot(voc_dec2,aes(x=sample, y=abundance)) +
 # it looks like at 038 things change - abundance declines for decane
 
 # get compound names & remove them from voc dataframe
+# also remove mass and retention time
 voc_cmpd <- voc[,1, drop=FALSE]
 voc2 = subset(voc, select = -c(Compound))
 
@@ -56,7 +57,7 @@ voc2[] <- lapply(voc2, as.integer)
 # remerge compound names
 voc_bind <- cbind(voc_cmpd, voc2)
   
-# convert data format so each row is a sample, each column is a compoud
+# convert data format so each row is a sample, each column is a compound
 voc_transpose = as.data.frame(t(voc_bind))
 voc_transpose <- tibble::rownames_to_column(voc_transpose, "Compound")
 
@@ -119,14 +120,68 @@ voc_sub <- voc_sub[!grepl('A_071822_130',voc_sub$Sample_ID),]
 # make all negative values 0
 voc_sub[voc_sub < 0] <- 0
 
-# Upload cleaned data with all compounds to L1 folder
-write.csv(voc_sub, file.path(dir,"T7_warmx_VOC/L1/T7_total_VOC_2022_L1.csv"), row.names=F)
+# removing rep 1 - internal standard error (shown above in line 41)
+voc_sub_rm <- voc_sub %>%
+  filter(!(Rep == 1))
 
+# removing samples w/ abnormally high abundances
+voc_test_abun <- voc_sub_rm
+voc_test_abun$rowsums <- rowSums(voc_test_abun[2:725])
+ggplot(voc_test_abun, aes(x=Sample_ID, y=rowsums)) +
+  geom_bar(stat="identity")
+voc_sub_rm <- voc_sub_rm %>%
+  filter(!(Unique_ID == 79)) %>%
+  filter(!(Unique_ID == 39)) %>%
+  filter(!(Unique_ID == 62))
+
+# how many individuals were measure per treatment + rep?
+# I used this info in the leaf biomass L2 script to determine total biomass for only measured individuals
+voc_sub_rm %>% 
+  count(Treatment,Rep)
+voc_biomass <- read.csv(file.path(dir, "T7_warmx_VOC/L1/VOC_biomass_2022_L1.csv"))
+# making biomass treatments match voc data
+voc_biomass$Treatment[voc_biomass$Treatment == "Ambient"] <- "Ambient_Control"
+voc_biomass$Treatment[voc_biomass$Treatment == "Irrigated"] <- "Irrigated_Control"
+
+# merge voc w/ biomass data
+voc_bio <- left_join(voc_sub_rm,voc_biomass,by=c("Treatment","Rep"))
+
+# divide voc abundances by indiv plant biomass per treatment/rep
+# first remove compound name column & meta info columns
+voc_sample_names <- voc_bio[,1, drop=FALSE]
+voc_meta_info <- voc_bio[,726:732, drop=FALSE]
+voc_meta_info2 <- voc_bio[,734, drop=FALSE]
+voc_transpose_rm2 = subset(voc_bio, select = -c(Sample_ID,Unique_ID,Rep,Footprint,Subplot,Treatment,Notes,Weight_g,time_sampled))
+# divide
+voc_weighted_abun <- voc_transpose_rm2/voc_transpose_rm2[,725]
+# remerging with meta info
+voc_transpose_rm3 <- cbind(voc_sample_names,voc_weighted_abun,voc_meta_info,voc_meta_info2)
+# removing indiv weight column 
+voc_transpose_rm3 = subset(voc_transpose_rm3, select = -c(Weight_indiv_g))
+
+# divide by hours sampled
+# first remove compound name column & meta info columns
+voc_sample_names_time <- voc_transpose_rm3[,1, drop=FALSE]
+voc_meta_info_time <- voc_transpose_rm3[,726:732, drop=FALSE]
+voc_transpose_rm_time = subset(voc_transpose_rm3, select = -c(Sample_ID,Unique_ID,Rep,Footprint,Subplot,Treatment,Notes,Weight_g))
+# divide
+voc_weighted_abun_time <- voc_transpose_rm_time/voc_transpose_rm_time[,725]
+# remerging with meta info
+voc_transpose_rm4 <- cbind(voc_sample_names_time,voc_weighted_abun_time,voc_meta_info_time)
+# removing indiv weight column 
+voc_transpose_rm4 = subset(voc_transpose_rm4, select = -c(time_sampled))
+# removing weight column
+voc_transpose_rm4 = subset(voc_transpose_rm4, select = -c(Weight_g))
 
 # removing unnamed compounds from dataframe
-voc_named <- voc_sub %>%
+voc_named <- voc_transpose_rm4 %>%
   select(-contains(c("@")))
 
-# Upload cleaned data with named compounds to L1 folder
+
+
+## Upload cleaned data with all compounds to L1 folder
+write.csv(voc_transpose_rm4, file.path(dir,"T7_warmx_VOC/L1/T7_total_VOC_2022_L1.csv"), row.names=F)
+
+## Upload cleaned data with named compounds to L1 folder
 write.csv(voc_named, file.path(dir,"T7_warmx_VOC/L1/T7_named_VOC_2022_L1.csv"), row.names=F)
 
