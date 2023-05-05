@@ -125,6 +125,14 @@ voc_sub_rm <- voc_sub %>%
   filter(!(Rep == 1))
 
 # removing samples w/ abnormally high abundances
+# notes:
+# 3 samples (rep 4 ambient 79, rep 3 irrigated 39, and rep 5 warmed 62) have abnormally high abundances
+# for 79: columns 108, 117, 128, and 160 are high
+# for 39: columns 6, 91, 117, 128, 140, 336, and 361 are high
+# for 62: columns 91, 128, 156, 160, 260, 336, 383, and 395 are high
+# common to these samples are bicyclo[3.1.0] compounds, bicyclo[3.1.1] compounds, etc.
+# these compounds seem to function similarly to beta-pinene in anti-bacterial and anti-herbivory manners
+# so, I'm removing them because I believe these plants were stressed from factors other than our treatments
 voc_test_abun <- voc_sub_rm
 voc_test_abun$rowsums <- rowSums(voc_test_abun[2:725])
 ggplot(voc_test_abun, aes(x=Sample_ID, y=rowsums)) +
