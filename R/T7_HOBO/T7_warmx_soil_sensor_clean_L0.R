@@ -63,6 +63,9 @@ soil_meta2 <- left_join(soil_otc,meta_warmx,by=c("Plot_ID"))
 # remove extra irrigated control rows we didn't use in warmx
 soil_clean <- soil_meta2[!is.na(soil_meta2$Subplot_Descriptions),]
 
+# checking which treatments have missing reps
+unique(soil_clean[,c('Rep',"Subplot_Descriptions")])
+
 # upload clean data
 write.csv(soil_clean, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_soil_sensors_L1.csv"), row.names=F)
 
