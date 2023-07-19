@@ -52,5 +52,9 @@ cn <- full_join(meta1, cn_samples_edited, by = "Sample")
 
 cn <- na.omit(cn) # removes any rows with NAs (right now we only have non-insecticide plots - 7/18/2023)
 
+# remove redundant columns
+cn1 <- subset(cn, select = -c(Subplot_Letter,Field_Treatment_Number, Field_Rep, Footprint_Number, 
+                              Unique_Field_Location_Code, Subplot))
+
 # Upload cleaned data to L1 folder
 write.csv(cn, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_CN_Trpr_2022_L1.csv"), row.names=F)
