@@ -53,4 +53,4 @@ cn <- full_join(meta1, cn_samples_edited, by = "Sample")
 cn <- na.omit(cn) # removes any rows with NAs (right now we only have non-insecticide plots - 7/18/2023)
 
 # Upload cleaned data to L1 folder
-write.csv(cn, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_CN_Trpr_L1.csv"), row.names=F)
+write.csv(cn, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_CN_Trpr_2022_L1.csv"), row.names=F)
