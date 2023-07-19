@@ -22,6 +22,7 @@ meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
 weighsheet1 <- read.csv(file.path(dir, "T7_warmx_plant_traits/L0/T7_warmx_CN_weighsheet_Trpr_alive_dead_2022.csv"))
 weighsheet2 <- read.csv(file.path(dir, "T7_warmx_plant_traits/L0/T7_warmx_CN_weighsheet_Trpr_dead_2022.csv"))
 biomass <- read.csv(file.path(dir, "T7_warmx_plant_traits/L0/T7_warmx_CN_biomass_Trpr_2022.csv"))
+biomass <- biomass[-c(11)] # remove plate location column
 
 # create function to clean CN data files - this function can be used for data still in the "weighsheets" format
 CN_csvdata_initial_prep <- function(cn_data){
@@ -41,7 +42,7 @@ cn_samples_2_edited <- CN_csvdata_initial_prep(weighsheet2)
 # merge data frames above together
 cn_samples_edited <- merge(cn_samples_1_edited, cn_samples_2_edited, all = TRUE)
 
-names(biomass)[7] <- "Sample" #changing column name
+names(biomass)[10] <- "Sample" #changing column name
 
 # merge metadata file with biomass file
 meta1 <- full_join(meta, biomass, by = "Unique_Field_Location_Code")
@@ -49,6 +50,7 @@ meta1 <- full_join(meta, biomass, by = "Unique_Field_Location_Code")
 # merge new metadata file with cn samples file
 cn <- full_join(meta1, cn_samples_edited, by = "Sample")
 
+cn <- na.omit(cn) # removes any rows with NAs (right now we only have non-insecticide plots - 7/18/2023)
 
 # Upload cleaned data to L1 folder
-write.csv(both_height, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_CN_trpr_L1.csv"), row.names=F)
+write.csv(cn, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_CN_Trpr_L1.csv"), row.names=F)
