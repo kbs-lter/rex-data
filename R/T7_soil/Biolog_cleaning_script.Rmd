@@ -1,0 +1,212 @@
+---
+title: "Biolog Cleaning Script"
+author: "Adrian Noecker"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+COLLABORATORS: Moriah Young, Phoebe Zarnetske, Mark Hammond, Taylor Ulbrich
+DATA INPUT:  csv from the shared Google drive  
+DATA OUTPUT: Code and Rmd are in the scripts folder in Github  
+PROJECT: REX
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Loading in data
+```{r}
+# Clear all existing data
+rm(list=ls())
+
+#load packages
+library(car)
+library(tidyr)
+library(dplyr)
+library(vegan)
+library(tibble)
+library(plyr)
+library(readr)
+library(tidyverse)
+
+# Set working directory from .Renviron
+dir <- Sys.getenv("DATA_DIR")
+list.files(dir)
+setwd(dir)
+
+## Read in data
+#time 0
+time0 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/time0/")
+time0 = list.files(path=time0, pattern="*.csv", full.names=TRUE)
+time0_csv = ldply(time0, read_csv)
+
+#day 1
+day1 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day1/")
+day1 = list.files(path=day1, pattern="*.csv", full.names=TRUE)
+day1_csv = ldply(day1, read_csv)
+
+#day 2
+day2 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day2/")
+day2 = list.files(path=day2, pattern="*.csv", full.names=TRUE)
+day2_csv = ldply(day2, read_csv)
+
+#day 3
+day3 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day3/")
+day3 = list.files(path=day3, pattern="*.csv", full.names=TRUE)
+day3_csv = ldply(day3, read_csv)
+
+#day 4
+day4 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day4/")
+day4 = list.files(path=day4, pattern="*.csv", full.names=TRUE)
+day4_csv = ldply(day4, read_csv)
+
+#day 5
+day5 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day5/")
+day5 = list.files(path=day5, pattern="*.csv", full.names=TRUE)
+day5_csv = ldply(day5, read_csv)
+
+#day 6
+day6 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day6/")
+day6 = list.files(path=day6, pattern="*.csv", full.names=TRUE)
+day6_csv = ldply(day6, read_csv)
+
+#day 7
+day7 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day7/")
+day7 = list.files(path=day7, pattern="*.csv", full.names=TRUE)
+day7_csv = ldply(day7, read_csv)
+
+#meta data
+meta = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/")
+meta = list.files(path=meta, pattern="*.csv", full.names=TRUE)
+meta_csv = ldply(meta, read_csv)
+
+#meta data
+hour = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/")
+hour = list.files(path=hour, pattern="*.csv", full.names=TRUE)
+hour_csv = ldply(hour, read_csv)
+
+```
+
+
+#Merge
+```{r}
+#changing plate ID to plate in raw reads for merging
+time0mod <- time0_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day1mod <- day1_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day2mod <- day2_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day3mod <- day3_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day4mod <- day4_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day5mod <- day5_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day6mod <- day6_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+day7mod <- day7_csv %>% separate('Plate ID', c('Intials', 'Plate_word', 'Plate', 'day'))
+
+#Making plate columns numeric
+time0mod$Plate = as.numeric(as.character(time0mod$Plate))
+day1mod$Plate = as.numeric(as.character(day1mod$Plate))
+day2mod$Plate = as.numeric(as.character(day2mod$Plate))
+day3mod$Plate = as.numeric(as.character(day3mod$Plate))
+day4mod$Plate = as.numeric(as.character(day4mod$Plate))
+day5mod$Plate = as.numeric(as.character(day5mod$Plate))
+day6mod$Plate = as.numeric(as.character(day6mod$Plate))
+day7mod$Plate = as.numeric(as.character(day7mod$Plate))
+
+#making dataframe
+list_plates = list(meta_csv, time0mod, day1mod, day2mod, day3mod, day4mod, day5mod, day6mod, day7mod)
+plates <- list_plates %>% reduce(inner_join, by=c('Plate', 'Well'))
+
+
+
+#change date to hour 
+ecoplates <- merge(x=plates,y=hour_csv, by.x=c('Reading Date/Time'), 
+      by.y=c('Reading Date/Time'))
+
+#confirm that we have the same number of rows 
+length(rownames(day7_csv))
+length(rownames(meta_csv))
+length(rownames(plates))
+length(rownames(ecoplates))
+
+```
+
+#Cleaning
+```{r}
+# remove the Read_590 and Read_750 columns because we don't need them for analysis
+clean_ecoplates <- ecoplates %>%
+  select(-Read_590,-Read_750)
+
+
+# Convert any data in the Delta column that is <0 to 0 
+clean_ecoplates$Delta[clean_ecoplates$Delta < 0]<-0
+```
+
+# standardize each substrate absorance value 
+## First, standardize by substract the time = 0 value from every other time point for each individual well
+```{r}
+# Filter for just the Hour0
+hour0 <- filter(clean_ecoplates, Hour == 0)
+dim(hour0)
+
+# Keep just the Hour0 Delta, Plate and Well Columns and change Delta column name
+hour0mod <- select(hour0, Plate, Well, Delta, Hour)
+##colnames(hour0mod)[2] <- "Delta_Hr0" ##Delta to Delta_Hr0 check which column #
+
+# Merge biolog dataset with all times and biolog_Hr0 which has the separate column for hour0 
+biolog <- merge(clean_ecoplates, hour0mod, by=c("Plate", "Well"))
+
+# Now substract the PlateWell absorbance at Hr0 from every other Hr
+biolog$Delta_SubHr0<- biolog$Delta - biolog$Delta_Hr0
+
+# in some cases, the absorbance at time = 0 was greater than values at other hours, leading to negative difference when we normalized. 
+# SO, make everything that is <0 == 0 now after normalization 
+# Convert any data in the Delta_SubHr0 column that is <0 to 0 
+biolog$Delta_SubHr0[biolog$Delta_SubHr0 < 0] <- 0
+
+```
+
+## Second, Standardize by subtracting the water absorbance value for each sample at every time point
+```{r}
+# function to subtract water blank from each substrate 
+# to edit function: ensure correct "Delta" column name and "Delta_blank" new column name
+subtractWater<-function(dataframe){
+  #gives numeric value for water 
+  water<- as.numeric(unlist(subset(dataframe,Well_C_Source == "Water",Delta_SubHr0)))
+  #make a new blank column
+  dataframe["Delta_blank"]<-dataframe$Delta_SubHr0 - water
+ return(dataframe)
+}
+
+# run the function by the unique Sample_day id  
+biolog_subWater<-by(biolog,biolog$Hour,subtractWater)
+
+# turn this back into a data frame
+biolog_subWater2<-do.call(rbind,biolog_subWater)
+rownames(biolog_subWater2) <- c() 
+
+# View this function and check that there is a new column "Delta_blank" that is all the absorbances - the water absorbance (water should be at 0)
+View(biolog_subWater2)
+
+# Again, Convert any data in the Delta_Blank column that is <0 to 0 
+biolog_subWater2$Delta_blank[biolog_subWater2$Delta_blank < 0] <- 0
+```
+
+# Reformat dataframe into and abundance matrix and metadata for diversity assessments
+```{r}
+# first drop the unnecessary columns (all you need is Delta_blank and Sample_day and substrate)
+biolog3 = select(biolog_subWater2, Delta_blank, Well_C_Source, Hour, PlotID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
+View(biolog3)
+# Finally, confirm that all data are >0 
+biolog3$Delta_blank[biolog3$Delta_blank < 0]<-0
+
+# save this is a completed, standardized data 
+write.csv(biolog3, "/soil/Biolog EcoPlates/T7_warmx/L1/Biolog_data_L1.csv", row.names = FALSE)
+
+# Create an abundance table from this newly reshaped dataframe
+# remove water because this was only a blank/control and shouldn't be included in diversity indices 
+Absorb <- select(data_reshape, -water)
+View(Absorb)
+
+write.csv(Absorb, "/soil/Biolog EcoPlates/T7_warmx/L1/Biolog_data_NOWater_L1.csv", row.names = FALSE)
+```
+
