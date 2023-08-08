@@ -112,29 +112,38 @@ day5mod$Plate = as.numeric(as.character(day5mod$Plate))
 day6mod$Plate = as.numeric(as.character(day6mod$Plate))
 day7mod$Plate = as.numeric(as.character(day7mod$Plate))
 
-#making dataframe
-list_plates = list(meta_csv, time0mod, day1mod, day2mod, day3mod, day4mod, day5mod, day6mod, day7mod)
-plates <- list_plates %>% reduce(inner_join, by=c('Plate', 'Well'))
+#merging each day with meta
+time0merge<-merge(meta_csv, time0mod, by=c("Plate","Well"))
+day1merge<-merge(meta_csv, day1mod, by=c("Plate","Well"))
+day2merge<-merge(meta_csv, day2mod, by=c("Plate","Well"))
+day3merge<-merge(meta_csv, day3mod, by=c("Plate","Well"))
+day4merge<-merge(meta_csv, day4mod, by=c("Plate","Well"))
+day5merge<-merge(meta_csv, day5mod, by=c("Plate","Well"))
+day6merge<-merge(meta_csv, day6mod, by=c("Plate","Well"))
+day7merge<-merge(meta_csv, day7mod, by=c("Plate","Well"))
 
+#merging all readings to one
+plates <- rbind(time0merge, day1merge, day2merge, day3merge, day4merge, day5merge, day6merge, day7merge)
 
 
 #change date to hour 
 ecoplates <- merge(x=plates,y=hour_csv, by.x=c('Reading Date/Time'), 
       by.y=c('Reading Date/Time'))
 
+
 #confirm that we have the same number of rows 
-length(rownames(day7_csv))
-length(rownames(meta_csv))
-length(rownames(plates))
-length(rownames(ecoplates))
+length(rownames(day7_csv)) = 960
+length(rownames(meta_csv)) =960
+length(rownames(plates)) = 7680
+length(rownames(ecoplates)) = 7680
 
 ```
 
 #Cleaning
 ```{r}
-# remove the Read_590 and Read_750 columns because we don't need them for analysis
+# remove columns because we don't need them for analysis
 clean_ecoplates <- ecoplates %>%
-  select(-Read_590,-Read_750)
+  select(-Intials, -Plate_word, -Biolog_Plate_Wells_Location)
 
 
 # Convert any data in the Delta column that is <0 to 0 
@@ -149,8 +158,8 @@ hour0 <- filter(clean_ecoplates, Hour == 0)
 dim(hour0)
 
 # Keep just the Hour0 Delta, Plate and Well Columns and change Delta column name
-hour0mod <- select(hour0, Plate, Well, Delta, Hour)
-##colnames(hour0mod)[2] <- "Delta_Hr0" ##Delta to Delta_Hr0 check which column #
+hour0mod <- select(hour0, Plate, Well, Delta)
+colnames(hour0mod)[3] <- "Delta_Hr0" ##Delta to Delta_Hr0 
 
 # Merge biolog dataset with all times and biolog_Hr0 which has the separate column for hour0 
 biolog <- merge(clean_ecoplates, hour0mod, by=c("Plate", "Well"))
@@ -171,9 +180,9 @@ biolog$Delta_SubHr0[biolog$Delta_SubHr0 < 0] <- 0
 # to edit function: ensure correct "Delta" column name and "Delta_blank" new column name
 subtractWater<-function(dataframe){
   #gives numeric value for water 
-  water<- as.numeric(unlist(subset(dataframe,Well_C_Source == "Water",Delta_SubHr0)))
+  water<- as.numeric(unlist(subset(dataframe,Well_C_Source == "Water",Delta)))
   #make a new blank column
-  dataframe["Delta_blank"]<-dataframe$Delta_SubHr0 - water
+  dataframe["Delta_blank"]<-dataframe$Delta - water
  return(dataframe)
 }
 
@@ -194,7 +203,7 @@ biolog_subWater2$Delta_blank[biolog_subWater2$Delta_blank < 0] <- 0
 # Reformat dataframe into and abundance matrix and metadata for diversity assessments
 ```{r}
 # first drop the unnecessary columns (all you need is Delta_blank and Sample_day and substrate)
-biolog3 = select(biolog_subWater2, Delta_blank, Well_C_Source, Hour, PlotID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
+biolog3 = select(biolog_subWater2, Delta_blank, Delta_SubHr0, Well_C_Source, Hour, Plot_ID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
 View(biolog3)
 # Finally, confirm that all data are >0 
 biolog3$Delta_blank[biolog3$Delta_blank < 0]<-0
