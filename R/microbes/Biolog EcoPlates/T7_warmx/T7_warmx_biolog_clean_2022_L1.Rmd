@@ -38,52 +38,52 @@ setwd(dir)
 
 ## Read in data
 #time 0
-time0 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/time0/")
+time0 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/time0/")
 time0 = list.files(path=time0, pattern="*.csv", full.names=TRUE)
 time0_csv = ldply(time0, read_csv)
 
 #day 1
-day1 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day1/")
+day1 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day1/")
 day1 = list.files(path=day1, pattern="*.csv", full.names=TRUE)
 day1_csv = ldply(day1, read_csv)
 
 #day 2
-day2 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day2/")
+day2 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day2/")
 day2 = list.files(path=day2, pattern="*.csv", full.names=TRUE)
 day2_csv = ldply(day2, read_csv)
 
 #day 3
-day3 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day3/")
+day3 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day3/")
 day3 = list.files(path=day3, pattern="*.csv", full.names=TRUE)
 day3_csv = ldply(day3, read_csv)
 
 #day 4
-day4 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day4/")
+day4 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day4/")
 day4 = list.files(path=day4, pattern="*.csv", full.names=TRUE)
 day4_csv = ldply(day4, read_csv)
 
 #day 5
-day5 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day5/")
+day5 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day5/")
 day5 = list.files(path=day5, pattern="*.csv", full.names=TRUE)
 day5_csv = ldply(day5, read_csv)
 
 #day 6
-day6 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day6/")
+day6 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day6/")
 day6 = list.files(path=day6, pattern="*.csv", full.names=TRUE)
 day6_csv = ldply(day6, read_csv)
 
 #day 7
-day7 = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/day7/")
+day7 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day7/")
 day7 = list.files(path=day7, pattern="*.csv", full.names=TRUE)
 day7_csv = ldply(day7, read_csv)
 
 #meta data
-meta = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/")
+meta = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/")
 meta = list.files(path=meta, pattern="*.csv", full.names=TRUE)
 meta_csv = ldply(meta, read_csv)
 
 #meta data
-hour = file.path(dir, "/soil/Biolog EcoPlates/T7_warmx/L0/")
+hour = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/")
 hour = list.files(path=hour, pattern="*.csv", full.names=TRUE)
 hour_csv = ldply(hour, read_csv)
 
