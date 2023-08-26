@@ -176,46 +176,44 @@ biolog$Delta_SubHr0[biolog$Delta_SubHr0 < 0] <- 0
 
 ## Second, Standardize by subtracting the water absorbance value for each sample at every time point
 ```{r}
-# function to subtract water blank from each substrate 
-# to edit function: ensure correct "Delta" column name and "Delta_blank" new column name
-subtractWater<-function(dataframe){
-  #gives numeric value for water 
-  water<- as.numeric(unlist(subset(dataframe,Well_C_Source == "Water",Delta)))
-  #make a new blank column
-  dataframe["Delta_blank"]<-dataframe$Delta - water
- return(dataframe)
-}
+#Substracting water using same method as Hour 0
+water <- filter(clean_ecoplates, Well_C_Source == 'Water')
 
-# run the function by the unique Sample_day id  
-biolog_subWater<-by(biolog,biolog$Hour,subtractWater)
+#removing unneeded columns
+watermod <- select(water, Plate, Sample_ID, Delta, Hour)
+colnames(watermod)[3] <- "Delta_Water" ##Delta to Delta_Water 
 
-# turn this back into a data frame
-biolog_subWater2<-do.call(rbind,biolog_subWater)
-rownames(biolog_subWater2) <- c() 
+# Merge biolog dataset with all times and samples which has the separate column for water 
+biolog1 <- merge(biolog, watermod, by=c("Plate", "Sample_ID", "Hour"))
 
-# View this function and check that there is a new column "Delta_blank" that is all the absorbances - the water absorbance (water should be at 0)
-View(biolog_subWater2)
+# Now substract the PlateWell absorbance at water from every other sample at each time
+biolog1$Delta_MinusWater<- biolog1$Delta - biolog1$Delta_Water
 
 # Again, Convert any data in the Delta_Blank column that is <0 to 0 
-biolog_subWater2$Delta_blank[biolog_subWater2$Delta_blank < 0] <- 0
+biolog1$Delta_MinusWater[biolog1$Delta_MinusWater < 0] <- 0
 ```
 
 # Reformat dataframe into and abundance matrix and metadata for diversity assessments
 ```{r}
-# first drop the unnecessary columns (all you need is Delta_blank and Sample_day and substrate)
-biolog3 = select(biolog_subWater2, Delta_blank, Delta_SubHr0, Well_C_Source, Hour, Plot_ID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
-View(biolog3)
-# Finally, confirm that all data are >0 
-biolog3$Delta_blank[biolog3$Delta_blank < 0]<-0
+# first remove the unnecessary columns 
+biolog2 = select(biolog1, Delta_MinusWater, Delta, Delta_SubHr0, Well_C_Source, Hour, Plot_ID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
+View(biolog2)
 
 # save this is a completed, standardized data 
-write.csv(biolog3, "/soil/Biolog EcoPlates/T7_warmx/L1/Biolog_data_L1.csv", row.names = FALSE)
+write.csv(biolog2, file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L1/Biolog_data_L1.csv"), row.names = FALSE)
+
+# now reshape this and spread the data into wide format
+# spread(df, variable-to-be-columns, variable-to-fill-matrix(absorbance), fill = 0(this fills in 0s for any missing data))
+# http://environmentalcomputing.net/reshaping-data/
+biolog3 = select(biolog2, Delta_MinusWater, Well_C_Source, Hour, Plot_ID, Sample_ID, Biolog_column_ID) # remove all other columns 
+data_reshape <- spread(biolog3, Well_C_Source, Delta_MinusWater)
+View(data_reshape)
 
 # Create an abundance table from this newly reshaped dataframe
 # remove water because this was only a blank/control and shouldn't be included in diversity indices 
-Absorb <- select(data_reshape, -water)
+Absorb <- select(data_reshape, -Water)
 View(Absorb)
 
-write.csv(Absorb, "/soil/Biolog EcoPlates/T7_warmx/L1/Biolog_data_NOWater_L1.csv", row.names = FALSE)
+write.csv(Absorb, file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L1/Biolog_data_NOWater_L1.csv"), row.names = FALSE)
 ```
 
