@@ -105,15 +105,7 @@ height_22_meta <- height_22_meta %>% # remove rows with NAs for height
 height_22_meta$Climate_Treatment[is.na(height_22_meta$Climate_Treatment)] <- "Irrigated Control"
 
 # Removing unneeded columns
-height_21_meta[ ,c('Treatment',
-                   'Rep',
-                   'Footprint',
-                   'Subplot',
-                   'Unique_ID')] <- list(NULL)
-height_22_meta[ ,c('Treatment',
-                   'Rep',
-                   'Footprint',
-                   'Subplot')] <- list(NULL)
+height_21_meta[ ,c('Unique_ID')] <- list(NULL)
 
 # Merge dataframes
 height <- rbind(height_21_meta,height_22_meta)
