@@ -1,10 +1,10 @@
 # TITLE:          REX: HOBO data clean-up
-# AUTHORS:        Kara Dobson
-# COLLABORATORS:  Phoebe Zarnetske, Mark Hammond, Moriah Young, Emily Parker
+# AUTHORS:        Kara Dobson, Moriah Young
+# COLLABORATORS:  Phoebe Zarnetske, Mark Hammond, Emily Parker
 # DATA INPUT:     Data imported as csv files from shared REX Google drive L0 HOBO data
 # DATA OUTPUT:    Clean L1 HOBO data
 # PROJECT:        REX
-# DATE:           Jan 2023
+# DATE:           December 2023
 
 # Clear all existing data
 rm(list=ls())
@@ -178,8 +178,10 @@ df_list3[c(6,12,18,24)] <- lapply(df_list3[c(6,12,18,24)], add_rep,rep=6)
 df_list3 <- lapply(df_list3, col_names)
 df_list3 <- lapply(df_list3, change_POSIX)
 
-# lists the column names
+# lists the column names to check if they are all the same or not (if not then you might have to add to the HOBO clean col_names function)
 column_names <- lapply(df_list3, colnames)
+column_names
+df_list3 <- lapply(df_list3, col_names)
 
 # merge into one dataframe
 hobo_data3 <- rbind(df_list3$r1_a_3,df_list3$r2_a_3,df_list3$r3_a_3,df_list3$r4_a_3,df_list3$r5_a_3,df_list3$r6_a_3,
@@ -190,5 +192,6 @@ hobo_data3 <- rbind(df_list3$r1_a_3,df_list3$r2_a_3,df_list3$r3_a_3,df_list3$r4_
 hobo_data_all <- full_join(hobo_data, hobo_data2)
 hobo_data_all <- full_join(hobo_data_all, hobo_data3)
 
+
 # upload to drive
-write.csv(hobo_data, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
+write.csv(hobo_data_all, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
