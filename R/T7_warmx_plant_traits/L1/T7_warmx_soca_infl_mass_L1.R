@@ -5,6 +5,7 @@
 # PROJECT:        REX
 # DATE:           Oct 2023, Dec 2023
 
+### need more complete 2022 meta data
 
 # Clear all existing data
 rm(list=ls())
@@ -19,9 +20,9 @@ dir <- setwd("/Users/emilyparker/Documents/R/Goldenrod Project 2022")
 mass21 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_mass_2021_L0.csv"))
 mass22 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_mass_2022_L0.csv"))
 mass22_MH <- read.csv(file.path(dir,"LTER_REX_2022_INFL_seed_mass_MH.csv"), header=T)
-meta21 <- read.csv(file.path(dir, "REX_warmx_Soca_ID_metadata_2021.csv"))
-meta22 <- read.csv(file.path(dir, "REX_2022_Individual_Goldenrod_Data.csv"))
-heights21 <- read.csv(file.path(dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv"))
+meta21 <- read.csv(file.path(dir, "REX_warmx_Soca_ID_metadata_2021.csv")) # climate treatment
+meta22 <- read.csv(file.path(dir, "REX_2022_Individual_Goldenrod_Data.csv")) # rep, galling status
+heights21 <- read.csv(file.path(dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv")) # galling status
 
 # Removing unneeded columns
 mass21[ ,c('Date_.of_Field_Harvest',
@@ -131,33 +132,35 @@ heights21$Galling_Status[heights21$Galling_Status == "n"] = 'Non-Galled'
 mass22 <- rbind(mass22,mass22_MH)
 
 # Adding year column to all dataframes
-mass21$Year <- 2021
-mass22$Year <- 2022
+#mass21$Year <- 2021
+#mass22$Year <- 2022
 
 
 # Merge data with meta-data
 mass21_meta <- left_join(meta21, mass21, by = "Unique_ID") %>%
   left_join(., heights21, by="Unique_ID") 
+mass21_meta$Year <- 2021
 
 meta21$Unique_ID <- NULL # note: unique ID between meta-data and height_22 refer to different plots, so removing this here
 
 mass22_meta <- left_join(meta22, mass22, by = "Unique_ID") %>% #merge galling status
   left_join(., meta21, by = c("Treatment","Rep","Footprint","Subplot")) #merge climate treatment
-
+mass22_meta$Year <- 2022
 
 # remove duplicated rows
 mass22_meta <- mass22_meta[!duplicated(mass22_meta), ]
 mass21_meta <- mass21_meta[!duplicated(mass21_meta), ]
 
-# remove rows with NAs for length / mass / gall
-mass22_meta <- mass22_meta %>% 
-  drop_na(Total_Mass)
-mass21_meta <- mass21_meta %>% 
-  drop_na(Total_Mass)
+# remove rows with NAs for gall
 mass22_meta <- mass22_meta %>% 
   drop_na(Galling_Status)
 mass21_meta <- mass21_meta %>% 
   drop_na(Galling_Status)
+
+#add zeros for missing mass values
+mass21_meta[is.na(mass21_meta)] <- 0
+mass22_meta[is.na(mass22_meta)] <- 0
+  
 
 
 # Fixing NA climate treatment information (all irrigated controls)
@@ -171,3 +174,4 @@ mass <- rbind(mass21_meta,mass22_meta)
 
 # # Upload cleaned data to L1 folder
 #write.csv(mass, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_soca_infl_mass_L1.csv"), row.names=F)
+write.csv(mass,file.path(dir,"T7_warmx_soca_infl_mass_L1.csv"),row.names=F)
