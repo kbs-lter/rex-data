@@ -18,10 +18,10 @@ dir <- setwd("/Users/emilyparker/Documents/R/Goldenrod Project 2022")
 # Read in data
 mass21 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_mass_2021_L0.csv"))
 mass22 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_mass_2022_L0.csv"))
+mass22_MH <- read.csv(file.path(dir,"LTER_REX_2022_INFL_seed_mass_MH.csv"), header=T)
 meta21 <- read.csv(file.path(dir, "REX_warmx_Soca_ID_metadata_2021.csv"))
 meta22 <- read.csv(file.path(dir, "REX_2022_Individual_Goldenrod_Data.csv"))
 heights21 <- read.csv(file.path(dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv"))
-
 
 # Removing unneeded columns
 mass21[ ,c('Date_.of_Field_Harvest',
@@ -35,6 +35,9 @@ mass22[ ,c('Date_of_fruit_Dissection',
            'INFL_only_freshweight_g',
            'Leaves_only_freshweight__g',
            'notes')] <- list(NULL)
+
+mass22_MH[,c('field.and.proofing.notes', 
+             'Weighed.and.Processed.by')] <- list(NULL)
 
 meta21[ ,c('Old.ID',
            'Flowered.',
@@ -85,6 +88,9 @@ heights21 <- heights21 %>%
   filter(!(Unique_Plant_Number == 286.1)) %>% # keeping 286.2 since it was recorded at a later date
   mutate_at(1, round, 0) # rounding unique plant ID to whole integer
 
+# Fixing plant ID values in 2022 MH data
+mass22_MH <- mass22_MH %>%
+  mutate_at(1,round,0)
 
 # Renaming columns
 
@@ -95,6 +101,10 @@ mass21 <- mass21 %>%
 mass22 <- mass22 %>% 
   rename("Unique_ID" = "Individual_Plant_Number",
          "Total_Mass" = "Total_INFL_freshweight_g")
+
+mass22_MH <- mass22_MH %>%
+  rename ("Unique_ID" = "Unique.Plant.ID.Number",
+          "Total_Mass" = "Seeds..g.")
 
 meta21 <- meta21 %>% 
   rename("Climate_Treatment" = "Treatment.1",
@@ -117,6 +127,8 @@ heights21$Galling_Status[heights21$Galling_Status == "N"] = 'Non-Galled'
 heights21$Galling_Status[heights21$Galling_Status == "y"] = 'Galled'
 heights21$Galling_Status[heights21$Galling_Status == "n"] = 'Non-Galled'
 
+#combine 2022 entries
+mass22 <- rbind(mass22,mass22_MH)
 
 # Adding year column to all dataframes
 mass21$Year <- 2021
