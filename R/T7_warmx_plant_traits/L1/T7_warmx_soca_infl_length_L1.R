@@ -5,6 +5,7 @@
 # PROJECT:        REX
 # DATE:           Oct 2023, Dec 2023
 
+ ## need more complete 2022 meta data
 
 # Clear all existing data
 rm(list=ls())
@@ -18,9 +19,9 @@ dir <- setwd("/Users/emilyparker/Documents/R/Goldenrod Project 2022")
 # Read in data
 length21 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_length_2021_L0.csv"))
 length22 <- read.csv(file.path(dir, "T7_warmx_Soca_infl_length_2022_L0.csv"))
-meta21 <- read.csv(file.path(dir, "REX_warmx_Soca_ID_metadata_2021.csv"))
-meta22 <- read.csv(file.path(dir, "REX_2022_Individual_Goldenrod_Data.csv"))
-heights21 <- read.csv(file.path(dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv"))
+meta21 <- read.csv(file.path(dir, "REX_warmx_Soca_ID_metadata_2021.csv")) # climate treatment
+meta22 <- read.csv(file.path(dir, "REX_2022_Individual_Goldenrod_Data.csv")) # rep, galling
+heights21 <- read.csv(file.path(dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv")) # galling
 
 
 # Removing unneeded columns
@@ -116,45 +117,54 @@ heights21$Galling_Status[heights21$Galling_Status == "y"] = 'Galled'
 heights21$Galling_Status[heights21$Galling_Status == "n"] = 'Non-Galled'
 
 
-# Adding year column to all dataframes
-length21$Year <- 2021
-length22$Year <- 2022
 
 
 
 # Merge data with meta-data
 length21_meta <- left_join(meta21, length21, by = "Unique_ID") %>%
   left_join(., heights21, by="Unique_ID")
+length21_meta$Year <- 2021
   
 meta21$Unique_ID <- NULL # note: unique ID between meta-data and height_22 refer to different plots, so removing this here
 
 length22_meta <- left_join(meta22, length22, by = "Unique_ID") %>% #merge galling status
   left_join(., meta21, by = c("Treatment","Rep","Footprint","Subplot")) #merge climate treatment
+length22_meta$Year <- 2022
 
+# Fixing NA climate treatment information (all irrigated controls)
+length22_meta$Climate_Treatment[is.na(length22_meta$Climate_Treatment)] <- "Irrigated Control"
 
 # remove duplicated rows
 length22_meta <- length22_meta[!duplicated(length22_meta), ] 
 length21_meta <- length21_meta[!duplicated(length21_meta), ]
 
-# remove rows with NAs for length / mass / gall
-length22_meta <- length22_meta %>% 
-  drop_na(Length)
-length21_meta <- length21_meta %>% 
-  drop_na(Length)
+# remove rows with NAs for gall
 length22_meta <- length22_meta %>% 
   drop_na(Galling_Status)
 length21_meta <- length21_meta %>% 
   drop_na(Galling_Status)
-
 
 # Fixing NA climate treatment information (all irrigated controls)
 length22_meta$Climate_Treatment[is.na(length22_meta$Climate_Treatment)] <- "Irrigated Control"
 
-# Removing unneeded columns
-#height_21_meta[ ,c('Unique_ID')] <- list(NULL)
+#fill in missing values with 0s
+length21_meta$Count[is.na(length21_meta$Count)] <- 0
+length22_meta$Count[is.na(length22_meta$Count)] <- 0
+length21_meta$Length[is.na(length21_meta$Length)] <- 0
+length22_meta$Length[is.na(length22_meta$Length)] <- 0
+
+#fill in missing types with "Primary"
+length21_meta$Type[is.na(length21_meta$Type)] <- "Primary"
+length22_meta$Type[is.na(length22_meta$Type)] <- "Primary"
+
+# Fixing NA climate treatment information (all irrigated controls)
+length22_meta$Climate_Treatment[is.na(length22_meta$Climate_Treatment)] <- "Irrigated Control"
+
+
 
 # Merge dataframes
 length <- rbind(length21_meta,length22_meta)
 
 # # Upload cleaned data to L1 folder
 #write.csv(length, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_soca_infl_length_L1.csv"), row.names=F)
+write.csv(length,file.path(dir,"Outputs/T7_warmx_soca_infl_length_L1.csv"),row.names=F)
