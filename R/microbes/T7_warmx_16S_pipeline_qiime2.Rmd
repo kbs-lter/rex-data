@@ -1,0 +1,278 @@
+---
+title: "16S Pipeline"
+author: "Moriah Young"
+date: "2023-01-31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{bash}
+#load anaconda
+module load Conda/3
+
+#activate qiime2
+conda activate qiime2-2022.11
+
+# random notes
+# Ctrl + C to stop a process running on a terminal
+#SBATCH --output=~/%x-%j.slurmout # x is job name and j is job number and the outputs will go here
+```
+
+Import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/20221205_16SV4-1_PE250
+qiime tools import 
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path 20221205_16SV4-1_PE250_manifest.txt/ \
+--input-format PairedEndFastqManifestPhred33V2 \
+--output-path 20221205_16SV4-1_PE250.qza \
+
+# enter the code below in one string like this to run on the hpcc
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path 20221205_16SV4-1_PE250_manifest.txt --input-format PairedEndFastqManifestPhred33V2 --output-path 20221205_16SV4-1_PE250.qza
+
+# Run 2
+cd /mnt/home/youngmor/20221205_16SV4-2_PE250
+qiime tools import 
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path 20221205_16SV4-2_PE250_manifest.txt/ \
+--input-format PairedEndFastqManifestPhred33V2 \
+--output-path 20221205_16SV4-2_PE250.qza
+
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path 20221205_16SV4-2_PE250_manifest.txt --input-format PairedEndFastqManifestPhred33V2 --output-path 20221205_16SV4-2_PE250.qza
+````
+
+Evaluate data quality
+We need to examine the sequence quality to determine how we should trim the sequences. If you have run FastQC on your raw sequence files, you can examine the per base sequence quality category. Qiime also provides a plugin for graphing sequence quality. Add the input and output names to the following commands and run:
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/20221205_16SV4-1_PE250
+qiime demux summarize \
+--i-data 20221205_16SV4-1_PE250.qza \
+--o-visualization 20221205_16SV4-1_PE250_SUMMARY_VIZ.qzv
+qiime tools view 20221205_16SV4-1_PE250_SUMMARY_VIZ.qzv
+
+# Run 2
+cd /mnt/home/youngmor/20221205_16SV4-2_PE250
+qiime demux summarize \
+--i-data 20221205_16SV4-2_PE250.qza \
+--o-visualization 20221205_16SV4-2_PE250_SUMMARY_VIZ.qzv
+qiime tools view 20221205_16SV4-2_PE250_SUMMARY_VIZ.qzv
+```
+
+Denoise sequences using dada2
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/20221205_16SV4-1_PE250
+qiime dada2 denoise-paired --i-demultiplexed-seqs 20221205_16SV4-1_PE250.qza \
+--p-trim-left-f 0 \
+--p-trim-left-r 0 \
+--p-trunc-len-f 250 \ # this number will change based on the quality of your sequences
+--p-trunc-len-r 250 \ # this number will change based on the quality of your sequences
+--o-table 20221205_16SV4-1_PE250-dada2table.qza \
+--o-representative-sequences 20221205_16SV4-1_PE250-rep-seqs.qza \
+--o-denoising-stats 20221205_16SV4-1_PE250-denoising-stats.qza \
+--p-n-threads 36
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs 20221205_16SV4-1_PE250.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 250 --p-trunc-len-r 250 --o-table 20221205_16SV4-1_PE250-dada2table.qza --o-representative-sequences 20221205_16SV4-1_PE250-rep-seqs.qza --o-denoising-stats 20221205_16SV4-1_PE250-denoising-stats.qza --p-n-threads 36 --verbose
+
+#job below on hpcc took 03:55:40
+#!/bin/bash --login
+########## SBATCH Lines for Resource Request ##########
+ 
+#SBATCH --time=24:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=16
+#SBATCH --mem-per-cpu=64G            # memory required per allocated CPU (or core) - amount of memory (in bytes)
+#SBATCH --job-name qiime_denoising5      # you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=youngmor@msu.edu 
+
+# Run 2
+cd /mnt/home/youngmor/20221205_16SV4-2_PE250
+qiime dada2 denoise-paired --i-demultiplexed-seqs 20221205_16SV4-2_PE250.qza\
+--p-trim-left-f 0 \
+--p-trim-left-r 0 \
+--p-trunc-len-f 250 \ # this number will change based on the quality of your sequences
+--p-trunc-len-r 250 \ # this number will change based on the quality of your sequences
+--o-table 20221205_16SV4-2_PE250-dada2table.qza \
+--o-representative-sequences 20221205_16SV4-2_PE250-rep-seqs.qza \
+--o-denoising-stats 20221205_16SV4-2_PE250-denoising-stats.qza \
+
+# save these files!
+```
+
+Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
+You can then drag and drop the .qzv file into this website: https://view.qiime2.org/ 
+You'll need to download it from the interactive interface onto your mac
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/20221205_16SV4-1_PE250
+qiime metadata tabulate \
+  --m-input-file 20221205_16SV4-1_PE250-denoising-stats.qza \
+  --o-visualization 20221205_16SV4-1_PE250-denoising-stats.qzv
+  
+qiime metadata tabulate --m-input-file 20221205_16SV4-1_PE250-denoising-stats.qza --o-visualization 20221205_16SV4-1_PE250-denoising-stats.qzv
+
+# Run 2
+cd /mnt/home/youngmor/20221205_16SV4-2_PE250
+qiime metadata tabulate \
+  --m-input-file 20221205_16SV4-2_PE250-denoising-stats.qza \
+  --o-visualization 20221205_16SV4-2_PE250-denoising-stats.qzv
+  
+qiime metadata tabulate --m-input-file 20221205_16SV4-2_PE250-denoising-stats.qza --o-visualization 20221205_16SV4-2_PE250-denoising-stats.qzv
+```
+
+# Merge all the rep sequence outputs into one file
+```{bash}
+cd /mnt/home/youngmor
+qiime feature-table merge-seqs \
+--i-data 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-rep-seqs.qza \
+--i-data 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-rep-seqs.qza \
+--o-merged-data 16S-2021-merged-rep-seqs.qza
+
+qiime feature-table merge-seqs --i-data 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-rep-seqs.qza --i-data 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-rep-seqs.qza --o-merged-data 16S-2021-merged-rep-seqs.qza
+```
+
+# Merge the dada2table outputs into one file
+```{bash}
+cd /mnt/home/youngmor
+qiime feature-table merge \
+  --i-tables 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-dada2table.qza \
+  --i-tables 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-dada2table.qza \
+  --o-merged-table 16S-2021-merged-dada2table.qza
+
+qiime feature-table merge --i-tables 20221205_16SV4-1_PE250/20221205_16SV4-1_PE250-dada2table.qza --i-tables 20221205_16SV4-2_PE250/20221205_16SV4-2_PE250-dada2table.qza --o-merged-table 16S-2021-merged-dada2table.qza
+```
+
+# Training a classifier
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5069754/ # primers
+```{bash}
+# extract reference reads
+qiime feature-classifier extract-reads \
+  --i-sequences silva-138-99-seqs.qza \
+  --p-f-primer GTGCCAGCMGCCGCGGTAA \ #515f
+  --p-r-primer GGACTACHVGGGTWTCTAAT \ #806r
+  --o-reads silva-138-99-extracts.qza
+  
+cd /mnt/home/youngmor/REX-soil
+qiime feature-classifier extract-reads --i-sequences silva-138-99-seqs.qza --p-f-primer GTGCCAGCMGCCGCGGTAA --p-r-primer GGACTACHVGGGTWTCTAAT --o-reads silva-138-99-extracts.qza
+  
+# train the classifier
+qiime feature-classifier fit-classifier-naive-bayes \
+  --i-reference-reads silva-138-99-extracts.qza \
+  --i-reference-taxonomy silva-138-99-tax.qza \
+  --o-classifier classifier.qza
+  
+qiime feature-classifier fit-classifier-naive-bayes --i-reference-reads silva-138-99-extracts.qza --i-reference-taxonomy silva-138-99-tax.qza --o-classifier classifier.qza
+
+# extracting the reference reads and training the classifier took 1.5 hours on the hpcc (using the same SLURM code/settings as the denoising above)
+  
+# test the classifier
+qiime feature-classifier classify-sklearn \
+  --i-classifier classifier.qza \
+  --i-reads 16S-2021-merged-rep-seqs.qza \
+  --o-classification 16S-taxonomy.qza
+
+qiime feature-classifier classify-sklearn --i-classifier classifier.qza --i-reads 16S-2021-merged-rep-seqs.qza --o-classification 16S-taxonomy.qza
+
+# visualize
+qiime metadata tabulate \
+  --m-input-file 16S-taxonomy.qza \
+  --o-visualization 16S-taxonomy.qzv
+
+# testing the classifier and creating the .qzv file took 7 hours on the hpcc (using the same SLURM code/settings as the denoising script above)
+  
+qiime metadata tabulate --m-input-file 16S-taxonomy.qza --o-visualization 16S-taxonomy.qzv
+```
+
+# This did not work for me below - got this error:
+# The scikit-learn version (0.23.1) used to generate this artifact does not match the current version of scikit-learn installed (0.24.1). Please retrain your classifier for your current deployment to prevent data-corruption errors.
+# Taxonomically classify ASVs on a pretrained classifier
+```{bash}
+cd /mnt/home/youngmor/REX-soil
+qiime feature-classifier classify-sklearn \
+--i-classifier silva-138-99-515-806-nb-classifier.qza \ 
+--i-reads 16S-2021-merged-rep-seqs.qza \
+--o-classification 16S-2021-taxonomy.qza \
+--p-n-jobs 36
+
+conda install scikit-learn==0.23.1 # this didn't work
+qiime feature-classifier classify-sklearn --i-classifier silva-138-99-515-806-nb-classifier.qza --i-reads 16S-2021-merged-rep-seqs.qza --o-classification 16S-2021-taxonomy.qza --p-n-jobs 36
+```
+
+# Generate a phylogenetic tree
+https://docs.qiime2.org/2023.2/tutorials/phylogeny/#root-the-phylogeny
+```{bash}
+cd /mnt/home/youngmor/REX-soil
+
+# this aligns your sequences
+qiime alignment mafft \
+  --i-sequences 16S-2021-merged-rep-seqs.qza \
+  --o-alignment 16S-2021-aligned-rep-seqs.qza
+  
+qiime alignment mafft --i-sequences 16S-2021-merged-rep-seqs.qza --o-alignment 16S-2021-aligned-rep-seqs.qza
+  
+qiime alignment mask \
+  --i-alignment 16S-2021-aligned-rep-seqs.qza \
+  --o-masked-alignment 16S-2021-masked-aligned-rep-seqs.qza
+  
+qiime alignment mask --i-alignment 16S-2021-aligned-rep-seqs.qza --o-masked-alignment 16S-2021-masked-aligned-rep-seqs.qza
+
+# make the tree
+# using fasttree
+qiime phylogeny fasttree \
+  --i-alignment 16S-2021-masked-aligned-rep-seqs.qza \
+  --o-tree 16S-2021-fasttree-unrooted-tree.qza
+  --verbose
+  
+qiime phylogeny fasttree --i-alignment 16S-2021-masked-aligned-rep-seqs.qza --o-tree 16S-2021-fasttree-tree.qza --verbose
+
+#root the tree using the longest root
+qiime phylogeny midpoint-root \
+  --i-tree 16S-2021-fasttree-unrooted-tree.qza \
+  --o-rooted-tree 16S-2021-fasttree-rooted-tree.qza
+
+qiime phylogeny midpoint-root --i-tree 16S-2021-fasttree-unrooted-tree.qza --o-rooted-tree 16S-2021-fasttree-rooted-tree.qza
+
+
+# code below worth trying in the future - I think it's supposed to do all the steps above
+------------
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs.qza \
+  --output-dir mafft-fasttree-output
+-------------
+```
+
+# create mapping/metadata file
+```{r}
+# read in data
+seq_metadata <- read.csv("/Users/moriahyoung/Downloads/metadata.csv")
+microbe_metadata <- read.csv("/Users/moriahyoung/Downloads/MY_REX_soil_microbes_2021_metadata.csv")
+warmx_metadata <- read.csv("/Users/moriahyoung/Downloads/REX_warmx_metadata.csv")
+
+# merge files above
+seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
+bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
+                                      "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
+
+# reorder columns
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence",
+                                                       "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep",
+                                                       "Footprint_Treatment_full", "Footprint", "Footprint_Location",
+                                                       "Subplot", "Subplot_Location", "Subplot_Descriptions",
+                                                       "Unique_ID", "Drought", "Datetime_UTC")]
+
+colnames(bacterial_2021_metadata)[1] <- "sampleid"
+
+# get rid of controls
+bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
+bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+
+# write a new csv with the cleaned and merge data 
+write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.csv", row.names = F)
+write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = ",", row.names = F)
+```
+

@@ -1,0 +1,16 @@
+Attribute,Value
+Plot_Treatment,LTER MCSE plot treatment
+Plot_Replicate,LTER MCSE plot replicate
+Drought_Treatment,"REX drought treatment code, IR, VR, D1"
+Plot_ID,"REX plot ID combining plot treatment, plot replicate, and drought treatment"
+Footprint_Full,"Full text name of drought treatment, Control (irrigated), Variable Rainfall, Y1 Drought (soy)"
+Days_Since_Irrigation,Number of days since last irrigation event
+Sample_Week,"Week of sampling, starting at week 0"
+Start_Date,Date of sample collection
+Start_Time_EDT,"Start time of sample collection, eastern daylight time"
+Start_Time_UTC,"Start time of sample collection, coordinated universal time "
+End_Date,End date of sample collection
+End_Time_EDT,"End time of sample collection, eastern daylight time"
+End_Time_UTC,"End time of sample collection, coordinated universal time"
+Collector,Collector initials
+Comments,Comments
