@@ -1,0 +1,18 @@
+Attribute,Value
+Sort_Date,Date on which ants were sorted from contents of pitfall trap and identified
+Plot_Treatment,LTER MCSE plot treatment
+Plot_Replicate,LTER MCSE plot replicate
+Drought_Treatment,"REX drought treatment code, IR, VR, D1"
+Plot_ID,"REX plot ID combining plot treatment, plot replicate, and drought treatment"
+Footprint_Full,"Full text name of drought treatment, Control (irrigated), Variable Rainfall, Y1 Drought (soy)"
+Sample_Week,"Week of sampling, starting at week 1"
+Start_Date,Date of sample collection
+Days_Since_Irrigation,"Number of days since last irrigation event, starting at day 0"
+Genus,Genus of ant specimen(s)
+Epithet,Epithet of ant specimen(s)
+Species,Full species name of ant specimen(s)
+Reproductive_No0_Yes1,"Specimen worker, 0 or reproductive (queen or male), 1"
+Number,Number of individuals present per species per trap
+Voucher,Unique identification number pinned with each voucher specimen
+Sorter,"Sorter initials. JDS=Jamie Smith, ECO=Esbeiry Cordova-Ortiz, AKS=Alyssa Schuck"
+Notes,Notes
