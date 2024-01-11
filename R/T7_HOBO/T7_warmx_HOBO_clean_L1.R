@@ -21,7 +21,7 @@ list.files(dir)
 library(tidyverse)
 
 # Read in data
-# this data is from July 2021 - September 2021 (I think)
+# this data is from July 2021 - September 2021
 hobo_2021 <- read.csv(file.path(dir, "sensors/OTC Footprints/L0/2021 HOBO pendant data/REX_HOBO_Pendant_2021_7_8_21-9_14_21.csv"))
 
 # dataframe above is in wide format and needs to be converted to long
@@ -41,7 +41,7 @@ hobo_2021_long1 <- hobo_2021_long %>%
 hobo_2021_long2 <- hobo_2021_long1 %>%
         mutate(Rep = sub("R", "", Rep))
 
-# Convert the result to numeric if needed
+# Convert the result to numeric
 hobo_2021_long2$Rep <- as.numeric(hobo_2021_long2$Rep)
 
 # rename temp and light columns to match what we'll do below
