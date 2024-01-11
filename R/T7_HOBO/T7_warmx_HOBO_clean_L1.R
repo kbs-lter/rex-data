@@ -21,7 +21,14 @@ list.files(dir)
 library(tidyverse)
 
 # Read in data
-# these files have 2021 data and most of 2022 data (up to November 2022)
+# this data is from July 2021 - September 2021 (I think)
+HOBO_2021 <- read.csv(file.oath(dir, "sensors/OTC Footprints/L0/2021 HOBO pendant data/REX_HOBO_Pendant_2021_7_8_21-9_14_21.csv"))
+
+# dataframe above is in wide format and needs to be converted to long.
+
+
+
+# these files have September 2021 data and 2022 data up to November
 r1_a <- read.csv(file.path(dir, "sensors/OTC Footprints/L0/2022 HOBO pendant data/PLZ_R1_F7_A 2022-11-30 15_21_26 EST (Data EST).csv"))[,2:4]
 r1_w <- read.csv(file.path(dir, "sensors/OTC Footprints/L0/2022 HOBO pendant data/PLZ_R1_F7_W 2022-11-08 15_51_40 EST (Data EST)(1).csv"))[,2:4]
 
