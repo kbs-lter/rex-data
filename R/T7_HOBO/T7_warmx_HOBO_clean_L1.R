@@ -22,10 +22,40 @@ library(tidyverse)
 
 # Read in data
 # this data is from July 2021 - September 2021 (I think)
-HOBO_2021 <- read.csv(file.oath(dir, "sensors/OTC Footprints/L0/2021 HOBO pendant data/REX_HOBO_Pendant_2021_7_8_21-9_14_21.csv"))
+hobo_2021 <- read.csv(file.path(dir, "sensors/OTC Footprints/L0/2021 HOBO pendant data/REX_HOBO_Pendant_2021_7_8_21-9_14_21.csv"))
 
-# dataframe above is in wide format and needs to be converted to long.
+# dataframe above is in wide format and needs to be converted to long
+# delete first column that's not needed
+hobo_2021 <- hobo_2021[,-1]
 
+hobo_2021_long <- hobo_2021 %>%
+        pivot_longer(cols = starts_with("PLZ"), names_to = "Variable", values_to = "Value", values_drop_na = TRUE) %>%
+        separate(Variable, into = c("PI", "Rep", "footprint", "Treatment", "measurement"), sep = "_") %>% 
+        spread(key = measurement, value = Value)
+
+hobo_2021_long <- hobo_2021_long[,-c(2,4)]
+
+hobo_2021_long1 <- hobo_2021_long %>%
+        mutate(Treatment = ifelse(Treatment == "A", "Ambient", ifelse(Treatment == "W", "Warmed", Treatment)))
+
+hobo_2021_long2 <- hobo_2021_long1 %>%
+        mutate(Rep = sub("R", "", Rep))
+
+# Convert the result to numeric if needed
+hobo_2021_long2$Rep <- as.numeric(hobo_2021_long2$Rep)
+
+# rename temp and light columns to match what we'll do below
+names(hobo_2021_long2)[1] <- "Date_Time"
+names(hobo_2021_long2)[4] <- "Light_lux"
+names(hobo_2021_long2)[5] <- "Temperature_C"
+
+# Convert the date column to POSIXct format
+hobo_2021_long2$Date_Time <- as.POSIXct(strptime(hobo_2021_long2$Date_Time, format = "%m/%d/%y %H:%M:%S"))
+
+# Format the date column to the desired format
+hobo_2021_long2$Date_Time <- format(hobo_2021_long2$Date_Time, format = "%Y-%m-%d %H:%M:%S")
+
+hobo_2021_long2$Date_Time <- as.POSIXct(hobo_2021_long2$Date_Time, format = "%Y-%m-%d %H:%M:%S")
 
 
 # these files have September 2021 data and 2022 data up to November
@@ -198,7 +228,7 @@ hobo_data3 <- rbind(df_list3$r1_a_3,df_list3$r2_a_3,df_list3$r3_a_3,df_list3$r4_
 
 hobo_data_all <- full_join(hobo_data, hobo_data2)
 hobo_data_all <- full_join(hobo_data_all, hobo_data3)
-
+hobo_data_all <- full_join(hobo_data_all, hobo_2021_long2)
 
 # upload to drive
 write.csv(hobo_data_all, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
