@@ -1,7 +1,7 @@
 ---
 title: "Biolog Cleaning Script"
 author: "Adrian Noecker"
-date: "`r format(Sys.time(), '%B %d, %Y')`"
+date: "September 2023"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -216,4 +216,60 @@ View(Absorb)
 
 write.csv(Absorb, file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L1/Biolog_data_NOWater_L1.csv"), row.names = FALSE)
 ```
+
+# reformatting and checking absorbances
+# Note: the "biolog" dataframe is in wide format, and is the format that the data is output from the plate reader. The "standard" data frame is in narrow format.
+```{r}
+#removing water from standard biolog
+standardnowater <- standardbiolog %>% filter(!Well_C_Source %in% c("Water"))
+
+#changing row name and reformatting, combine hour and ID to one column
+biologdf <- biolognowater %>%
+  unite(SampleID_Hour, Biolog_column_ID, Hour, sep ="_", remove = FALSE)
+
+standarddf <- standardnowater %>%
+  unite(SampleID_Hour, Biolog_column_ID, Hour, sep ="_", remove = FALSE)
+
+#renaming new column
+biologdf$rowname <- biologdf$SampleID_Hour
+
+# Note from Moriah: is there a reason why the first column is converted to the row names??
+#changing column to row
+biologmatrix <- column_to_rownames(biologdf, "rowname")
+
+#Check control absorbances (all should == 0 if no contamination)
+biologcontrol <- biologmatrix %>% filter(Sample_ID=="BIOLOG CONTROL")
+####Tween 40, Tween 80, D Xylose, X4 Hydroxy Benzoic Acid, and X2 Hydroxy Benzoic Acid larger than 0.01 in a few controls, most hour 0 in plates 5, 7, 9, and 10 so maybe just the initial color of well and not contamination??
+
+standardcontrol <- standarddf %>% filter(Sample_ID=="BIOLOG CONTROL")
+
+#exclude controls for analysis
+biologsamples <- biologmatrix %>% filter(!Sample_ID %in% c("BIOLOG CONTROL"))
+
+standardsamples <- standarddf %>% filter(!Sample_ID %in% c("BIOLOG CONTROL"))
+
+#import meta data to get treatment type
+meta <- read.csv(file.path(dir, "/REX_warmx_metadata.csv"))
+
+#get rid of unneeded columns
+meta1 <- meta %>% dplyr::select(Subplot_Descriptions, Unique_ID, Rep, Footprint_Location)
+
+# Note from Moriah: when we merge these two together, we lose the matrix formatting - may need to run "column_to_rownames" function again on new dataframe to make SampleID_Hour row names
+#combine meta and sample df
+biologsamples1 <- merge(x=biologsamples, y=meta1, by.x=c('Plot_ID'), 
+      by.y=c('Unique_ID'))
+
+standardsamples1 <- merge(x=standardsamples, y=meta1, by.x=c('Plot_ID'), 
+      by.y=c('Unique_ID'))
+
+#change column order
+biologsamples2 <- biologsamples1 %>% relocate(Subplot_Descriptions, .after = Biolog_column_ID) %>% 
+        relocate(Rep, .after = Plot_ID) %>% 
+        relocate(Footprint_Location, .after = Rep)
+
+# upload new data frame to L2 folder in warmx 
+write.csv(biologsamples2, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L2/biolog_hill_diversity_L2.csv"), row.names = FALSE)
+
+```
+
 
