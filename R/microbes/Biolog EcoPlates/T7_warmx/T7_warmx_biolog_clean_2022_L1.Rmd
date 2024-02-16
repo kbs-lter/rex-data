@@ -34,7 +34,6 @@ library(tidyverse)
 # Set working directory from .Renviron
 dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
-setwd(dir)
 
 ## Read in data
 #time 0
@@ -86,9 +85,7 @@ meta_csv = ldply(meta, read_csv)
 hour = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/")
 hour = list.files(path=hour, pattern="*.csv", full.names=TRUE)
 hour_csv = ldply(hour, read_csv)
-
 ```
-
 
 #Merge
 ```{r}
@@ -268,7 +265,7 @@ biologsamples2 <- biologsamples1 %>% relocate(Subplot_Descriptions, .after = Bio
         relocate(Footprint_Location, .after = Rep)
 
 # upload new data frame to L2 folder in warmx 
-write.csv(biologsamples2, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L2/biolog_hill_diversity_L2.csv"), row.names = FALSE)
+write.csv(biologsamples2, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L2/biolog_clean_L1.csv"), row.names = FALSE)
 
 ```
 
