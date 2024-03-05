@@ -22,13 +22,16 @@ anpp19 <- read.csv(file.path(dir, "T7_ANPP/L0/2019PreTreatmentANPP/T7_REX_ANPP_2
 anpp21a <- read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/T7_REX_ANPP_warmX_2021_L0.csv"))
 # 2021: subplots from other treatment set (Jen Lau)
 anpp21b <-read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/LTER_T7_REX_ANPP_LAU_2021_MHfinal_L0.csv"))
+# 2022
 anpp22 <- read.csv(file.path(dir, "T7_ANPP/L0/2022ANPP/T7_REX_ANPP_2022_L0.csv"))
+# 2023
+#anpp23 <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/"))
 # site and species look-ups
 site <- read.csv(file.path(dir, "REX_template.csv"))
 taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
 # Subset out just T7
-site<-site[grepl('T7',site$Treatment),]
+site <- site[grepl('T7',site$Treatment),]
 
 # Make the ANPP data match the site file format
 names(anpp19)[names(anpp19)=="Quad"] <- "Subplot_location" 
