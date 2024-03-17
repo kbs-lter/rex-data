@@ -4,7 +4,7 @@
 # DATA INPUT:     Data imported as csv files from shared REX Google drive T7_ANPP L0 folder
 # DATA OUTPUT:    Clean L1 data uploaded to T7_ANPP L1 folder
 # PROJECT:        REX
-# DATE:           Jan 2023; rev. Aug 2023 (incorporated all indiv. yr scripts into this one as master ANPP script)
+# DATE:           Jan 2023; rev. Aug 2023 (incorporated all indiv. yr scripts into this one as master ANPP script); March 2024 (adding 2023 ANPP data)
 
 # Clear all existing data
 rm(list=ls())
@@ -25,13 +25,50 @@ anpp21b <-read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/LTER_T7_REX_ANPP_LAU_2021
 # 2022
 anpp22 <- read.csv(file.path(dir, "T7_ANPP/L0/2022ANPP/T7_REX_ANPP_2022_L0.csv"))
 # 2023
-#anpp23 <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/"))
+anpp23 <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/T7_REX_ANPP_2023_L0.csv"))
+anpp23_meta <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/Prep work and methods/REX 2023 ANPP bag labeling - T7 only.csv"))
+names(anpp23_meta)[names(anpp23_meta)=="Subplot_ID_Number"] <- "Subplot_Unique_ID_Number" 
+# merge the two 2023 files together
+anpp23 <- full_join(anpp23, anpp23_meta, by = "Subplot_Unique_ID_Number")
 # site and species look-ups
 site <- read.csv(file.path(dir, "REX_template.csv"))
 taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
 
 # Subset out just T7
 site <- site[grepl('T7',site$Treatment),]
+
+# removing columns we don't need
+anpp19 = subset(anpp19, select = -c(Old_Footprint_ID_east_to_west,
+                                    New_Field_Location_Code,
+                                    Old_Field_Code,
+                                    New_Footprint_ID_west_to_east,
+                                    Footprint_Owner))
+anpp21a = subset(anpp21a, select = -c(X,X.1,Notes,Field_Loc_Code))
+anpp21b = subset(anpp21b, select = -c(Field_Unique_Location_ID,Full_Treatment_Description))
+anpp22 = subset(anpp22, select = -c(Unique_Field_Location_Code,
+                                    Footprint_Owner,
+                                    Type_of_Weighing._Direct_or_Indirect,
+                                    Dried_Bag.mass_g,
+                                    Type_of_Bag,
+                                    Sum_Bag_plus_Dried_Plant_Biomass_gram,
+                                    Notes,
+                                    data_entry_ID,
+                                    Mark_needs_to_do_further_proofing))
+anpp23 = subset(anpp23, select = -c(Subplot_Unique_ID_Number,
+                                    Bag_or_Envelope,
+                                    Bag_Size,
+                                    Direct_or_Indirect_Weighing_Measurement,
+                                    Dried_Biomass_g_with_Bag_mass,
+                                    Field_Notes,
+                                    Original_Data_entry_order,
+                                    Proofing_Notes,
+                                    Person_who_sorted_to_species,
+                                    Experimental_Unit_ID,
+                                    Plot_Location_ID,
+                                    Footprint_Treatment_full,
+                                    Experimental_Unit_ID,
+                                    Footprint_ID_Number,
+                                    X, X.1, X.2, X.3, X.4, X.5, X.6, X.7, X.8, X.9))
 
 # Make the ANPP data match the site file format
 names(anpp19)[names(anpp19)=="Quad"] <- "Subplot_location" 
@@ -57,37 +94,31 @@ names(anpp22)[names(anpp22)=="Field_Treatment_Number"] <- "Treatment"
 names(anpp22)[names(anpp22)=="Field_Rep"] <- "Replicate"
 names(anpp22)[names(anpp22)=="Footprint_Number"] <- "FP_location"
 names(anpp22)[names(anpp22)=="Subplot_Letter"] <- "Subplot_location"
+names(anpp22)[names(anpp22)=="Dried_Plant_Biomass_gram"] <- "plant_biomass_gm2"
+
+names(anpp23)[names(anpp23)=="Date_of_Harvest"] <- "Date"
+names(anpp23)[names(anpp23)=="Dried_Biomass_grams"] <- "plant_biomass_gm2"
+names(anpp23)[names(anpp23)=="Scale._meter_square"] <- "Scale_meter_square"
 
 # making sure data and site data is in the same format
 str(anpp19)
 str(anpp21a)
 str(anpp21b)
 str(anpp22)
-str(site)
-
-# removing columns we don't need
-anpp19 = subset(anpp19, select = -c(Old_Footprint_ID_east_to_west,
-                                    New_Field_Location_Code,
-                                    Old_Field_Code,
-                                    New_Footprint_ID_west_to_east,
-                                    Footprint_Owner))
-anpp21a = subset(anpp21a, select = -c(X,X.1,Notes,Field_Loc_Code))
-anpp21b = subset(anpp21b, select = -c(Field_Unique_Location_ID,Full_Treatment_Description))
-anpp22 = subset(anpp22, select = -c(Unique_Field_Location_Code,
-                                    Footprint_Owner,
-                                    Type_of_Weighing._Direct_or_Indirect,
-                                    Dried_Bag.mass_g,
-                                    Type_of_Bag,
-                                    Sum_Bag_plus_Dried_Plant_Biomass_gram,
-                                    Notes,
-                                    data_entry_ID,
-                                    Mark_needs_to_do_further_proofing))
+str(anpp23)
 
 # Add "Year"
 anpp19$Year<-2019
 anpp21a$Year<-2021
 anpp21b$Year<-2021
 anpp22$Year<-2022
+anpp23$Year<-2023
+
+# Add "Scale_meter_square"
+anpp19$Scale_meter_square <- 1.0
+anpp21a$Scale_meter_square <- 0.2
+anpp21b$Scale_meter_square <- 0.2
+anpp22$Scale_meter_square <- 0.2
 
 ## 2019
 # When ANPP was collected in 2019, the irrigated control footprint location and subplot treatment locations 
@@ -134,9 +165,6 @@ anpp21b$FP_location<-as.numeric(anpp21b$FP_location)
 
 ## 2022
 # adding together live and dead clover measurements
-# making all species capitalized
-anpp22$Species_Code = toupper(anpp22$Species_Code)
-
 # first, renaming all clover to "TRFPR"
 anpp22$Species_Code[anpp22$Species_Code == "TRFPR (ALIVE)"] <- "TRFPR"
 anpp22$Species_Code[anpp22$Species_Code == "TRFPR (DEAD)"] <- "TRFPR"
@@ -145,7 +173,7 @@ anpp22$Species_Code[anpp22$Species_Code == "TRFPR (DEAD)"] <- "TRFPR"
 anpp22_sum <- anpp22 %>%
   group_by(Field_Loc_Code) %>%
   filter(Species_Code == "TRFPR") %>%
-  mutate(Dried_Plant_Biomass_gram = sum(Dried_Plant_Biomass_gram)) %>%
+  mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
   distinct(Field_Loc_Code, .keep_all = TRUE)
 
 # remove clover from original anpp22 data
@@ -154,13 +182,6 @@ anpp22 <- anpp22 %>%
 
 # merge summed TRFPR with anpp data
 anpp22 <- bind_rows(anpp22, anpp22_sum)
-
-# check species code names
-unique(anpp22$Species_Code)
-
-# remove "SDEAD" and "SURFL" from original anpp data because this does not count towards ANPP
-anpp22 <- anpp22[!grepl('SDEAD',anpp22$Species_Code),]
-anpp22 <- anpp22[!grepl('SURFL',anpp22$Species_Code),]
 
 # check species code names
 unique(anpp22$Species_Code)
@@ -179,8 +200,19 @@ anpp22$Replicate[anpp22$Replicate == 4] = "R4"
 anpp22$Replicate[anpp22$Replicate == 5] = "R5"
 anpp22$Replicate[anpp22$Replicate == 6] = "R6"
 
-# rename biomass column
-names(anpp22)[names(anpp22)=="Dried_Plant_Biomass_gram"] <- "plant_biomass_gm2"
+## 2023
+anpp23$Date <- mdy(anpp23$Date) # change date to %m/%d/%Y format
+anpp23[["Date"]] <- as.Date(anpp23[["Date"]],format="%m/%d/%Y")
+
+# actually probably don't want to do this in this cleaning script!!
+# calculate sums of 0.2 and 0.8 scales together
+#anpp23_sum <- anpp23 %>%
+#        group_by(Plot_ID, Species_Code) %>%
+#        mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
+#        distinct(Plot_ID, .keep_all = TRUE)
+#
+## remove scale column
+#anpp23_sum <- anpp23_sum[,-2]
 
 # merging anpp19 data with sitedata
 anpp19.site <- left_join(anpp19, site, by = c("Treatment","Replicate","Subplot_location","Plot_ID"))
@@ -197,18 +229,38 @@ anpp22.site <- left_join(anpp22, site, by = c("Treatment","Replicate","FP_locati
 # merging anpp21 data 
 anpp21.site <- full_join(anpp21a.site, anpp21b.site)
 
-anpp1921_data <- full_join(anpp19.site,anpp21.site)
+anpp1921_data <- full_join(anpp19.site, anpp21.site)
 
-anpp_data <- full_join(anpp1921_data,anpp22.site)
+anpp192122 <- full_join(anpp1921_data, anpp22.site)
 
-### Phoebe stopped updating here Aug 3 2023 ###
+anpp_data <- full_join(anpp192122, anpp23)
+
+# remove "SDEAD" and "SURFL" from original anpp data because this does not count towards ANPP
+anpp_data <- anpp_data[!grepl('SDEAD',anpp_data$Species_Code),]
+anpp_data <- anpp_data[!grepl('SURFL',anpp_data$Species_Code),]
+
+# change species name to all uppercase
+anpp_data$Species_Code = toupper(anpp_data$Species_Code)
+
+# check species code names
+unique(anpp_data$Species_Code)
+
 # merging data with taxon information
 names(taxon)[names(taxon)=="LTER_code"] <- "Species_Code" # making species column the same name
-anpp_data$Species_Code = toupper(anpp_data$Species_Code)
 anpp_data <- left_join(anpp_data, taxon, by = c("Species_Code"))
 
 # removing unneeded columns
-anpp_data = subset(anpp_data, select = -c(code, USDA_code, site, old_name, old_code, resolution, note1, note2))
+anpp_data = subset(anpp_data, select = -c(code, 
+                                          USDA_code, 
+                                          site, 
+                                          old_name, 
+                                          old_code, 
+                                          resolution, 
+                                          note1, 
+                                          note2, 
+                                          MH_rhizomatous_suggestion,
+                                          rhizomatous,
+                                          Footprint_ID))
 
 # upload L1 data
 write.csv(anpp_data, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
