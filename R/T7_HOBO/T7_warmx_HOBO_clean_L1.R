@@ -230,5 +230,15 @@ hobo_data_all <- full_join(hobo_data, hobo_data2)
 hobo_data_all <- full_join(hobo_data_all, hobo_data3)
 hobo_data_all <- full_join(hobo_data_all, hobo_2021_long2)
 
+# Info to know for cleaning:
+# 2022-- pendants removed 3/27/2022. Date of burn 3/29/2022.  Date REX pendants start up. 4/15/2023.  So, no pendant data from 3/27/2022 thru 4/15/2022.
+# 2023 – pendants removed 3/27/2023. Date of burn 3/28/2022.  Date REX pendants start up. 4/19/2023. So, no pendant data from 3/27/2023 thru 4/19/2023
+
+# delete data that falls in the ranges specified above
+# 2022
+hobo_data_all_filtered <- hobo_data_all[!(hobo_data_all$Date_Time >= "2022-03-27 00:00:00" & hobo_data_all$Date_Time <= "2022-04-15 00:00:00"), ]
+# 2023
+hobo_data_all_filtered <- hobo_data_all[!(hobo_data_all$Date_Time >= "2022-03-27 00:00:00" & hobo_data_all$Date_Time <= "2022-04-19 00:00:00"), ]
+
 # upload to drive
-write.csv(hobo_data_all, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
+write.csv(hobo_data_all_filtered, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
