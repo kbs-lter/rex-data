@@ -16,20 +16,29 @@ library(tidyverse)
 dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
 
+# NOTES/TO DO
+# Under "Species_Code" sometimes there is "BULK" in 2022 or "PLOT LEVEL" in 2021. I'm pretty sure these mean the same thing
+# We should choose one name and change the other to match, either bulk or plot level. Some plots were only harvested at the 
+# plot level (not sorted to species or by group), so there is only one ANPP biomass measure associated with that plot,
+# which is where the plot level or bulk labeling comes in under "Species_Code"
+
 # Read in data (no data in 2020 due to COVID)
 anpp19 <- read.csv(file.path(dir, "T7_ANPP/L0/2019PreTreatmentANPP/T7_REX_ANPP_2019_L0.csv"))
 # 2021: subplots from warmed x insecticide treatment set only
-anpp21a <- read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/T7_REX_ANPP_warmX_2021_L0.csv"))
+anpp21a <- read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/T7_REX_ANPP_warmx_2021_L0 (1).csv"))
 # 2021: subplots from other treatment set (Jen Lau)
 anpp21b <-read.csv(file.path(dir, "T7_ANPP/L0/2021ANPP/LTER_T7_REX_ANPP_LAU_2021_MHfinal_L0.csv"))
 # 2022
 anpp22 <- read.csv(file.path(dir, "T7_ANPP/L0/2022ANPP/T7_REX_ANPP_2022_L0.csv"))
-# 2023
-anpp23 <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/T7_REX_ANPP_2023_L0.csv"))
+# 2023: subplots from warmed x insecticide treatment set only
+anpp23a <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/T7_REX_ANPP_2023_L0.csv"))
+# 2023:subplots from other treatment set (Jen Lau)
+#anpp23b
 anpp23_meta <- read.csv(file.path(dir, "T7_ANPP/L0/2023ANPP/Prep work and methods/REX 2023 ANPP bag labeling - T7 only.csv"))
 names(anpp23_meta)[names(anpp23_meta)=="Subplot_ID_Number"] <- "Subplot_Unique_ID_Number" 
 # merge the two 2023 files together
-anpp23 <- full_join(anpp23, anpp23_meta, by = "Subplot_Unique_ID_Number")
+anpp23 <- full_join(anpp23a, anpp23_meta, by = "Subplot_Unique_ID_Number")
+anpp23 <- anpp23[!is.na(anpp23$Date_of_Harvest),] # can remove this once the other 2023 data is added (on line 30)
 # site and species look-ups
 site <- read.csv(file.path(dir, "REX_template.csv"))
 taxon <- read.csv(file.path(dir, "REX_warmx_taxon.csv"))
@@ -43,7 +52,7 @@ anpp19 = subset(anpp19, select = -c(Old_Footprint_ID_east_to_west,
                                     Old_Field_Code,
                                     New_Footprint_ID_west_to_east,
                                     Footprint_Owner))
-anpp21a = subset(anpp21a, select = -c(X,X.1,Notes,Field_Loc_Code))
+anpp21a = subset(anpp21a, select = -c(Notes,Field_Loc_Code))
 anpp21b = subset(anpp21b, select = -c(Field_Unique_Location_ID,Full_Treatment_Description))
 anpp22 = subset(anpp22, select = -c(Unique_Field_Location_Code,
                                     Footprint_Owner,
@@ -63,10 +72,7 @@ anpp23 = subset(anpp23, select = -c(Subplot_Unique_ID_Number,
                                     Original_Data_entry_order,
                                     Proofing_Notes,
                                     Person_who_sorted_to_species,
-                                    Experimental_Unit_ID,
                                     Plot_Location_ID,
-                                    Footprint_Treatment_full,
-                                    Experimental_Unit_ID,
                                     Footprint_ID_Number,
                                     X, X.1, X.2, X.3, X.4, X.5, X.6, X.7, X.8, X.9))
 
@@ -107,15 +113,15 @@ str(anpp21b)
 str(anpp22)
 str(anpp23)
 
-# Add "Year"
+# Add "Year" column
 anpp19$Year<-2019
 anpp21a$Year<-2021
 anpp21b$Year<-2021
 anpp22$Year<-2022
 anpp23$Year<-2023
 
-# Add "Scale_meter_square"
-anpp19$Scale_meter_square <- 1.0
+# Add "Scale_meter_square" column - area clipped is different depending on year
+anpp19$Scale_meter_square <- 1.0 # should check what size area LTER core plots were harvested this year
 anpp21a$Scale_meter_square <- 0.2
 anpp21b$Scale_meter_square <- 0.2
 anpp22$Scale_meter_square <- 0.2
@@ -131,7 +137,7 @@ unique(sort(anpp19[["Plot_ID"]])) # check that there aren't any weird typos
 # Rows without Plot_ID are footprints that aren't involving warmX and aren't irrigated control; 
 # They are LTER CORE.
 # Comment out if you do not want to remove them
-anpp19 <- anpp19[-which(anpp19$Plot_ID == ""), ]
+#anpp19 <- anpp19[-which(anpp19$Plot_ID == ""), ]
 
 anpp19$Date <- mdy(anpp19$Date) # change date to %m/%d/%Y format
 anpp19[["Date"]] <- as.Date(anpp19[["Date"]],format="%m/%d/%Y")
@@ -160,6 +166,7 @@ anpp21b$FP_location[anpp21b$FP_location == "F3"] = 3
 anpp21b$FP_location[anpp21b$FP_location == "F4"] = 4
 anpp21b$FP_location[anpp21b$FP_location == "F5"] = 5
 anpp21b$FP_location[anpp21b$FP_location == "F6"] = 6
+anpp21b$FP_location[anpp21b$FP_location == "F7"] = 7
 
 anpp21b$FP_location<-as.numeric(anpp21b$FP_location)
 
@@ -203,16 +210,6 @@ anpp22$Replicate[anpp22$Replicate == 6] = "R6"
 ## 2023
 anpp23$Date <- mdy(anpp23$Date) # change date to %m/%d/%Y format
 anpp23[["Date"]] <- as.Date(anpp23[["Date"]],format="%m/%d/%Y")
-
-# actually probably don't want to do this in this cleaning script!!
-# calculate sums of 0.2 and 0.8 scales together
-#anpp23_sum <- anpp23 %>%
-#        group_by(Plot_ID, Species_Code) %>%
-#        mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
-#        distinct(Plot_ID, .keep_all = TRUE)
-#
-## remove scale column
-#anpp23_sum <- anpp23_sum[,-2]
 
 # merging anpp19 data with sitedata
 anpp19.site <- left_join(anpp19, site, by = c("Treatment","Replicate","Subplot_location","Plot_ID"))
@@ -260,7 +257,16 @@ anpp_data = subset(anpp_data, select = -c(code,
                                           note2, 
                                           MH_rhizomatous_suggestion,
                                           rhizomatous,
-                                          Footprint_ID))
+                                          Footprint_ID,
+                                          Subplot_ID))
+
+# order columns
+# 
+col_order <- c("Year", "Date", "Treatment", "Replicate", "Footprint", "FP_location", "Subplot", "Subplot_location",
+               "Experimental_Unit_ID", "Plot_ID", "Footprint_Treatment_full","Scale_meter_square", "plant_biomass_gm2", 
+               "Species_Code", "Group_Code", "scientific_name", "common_name", "origin", "group", "family", "duration", 
+               "growth_habit")
+anpp_data <- anpp_data[,col_order]
 
 # upload L1 data
 write.csv(anpp_data, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
