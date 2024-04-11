@@ -271,3 +271,49 @@ anpp_data <- anpp_data[,col_order]
 # upload L1 data
 write.csv(anpp_data, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
 
+# making a warmx only (with irrigated controls) data frame to upload to L1 folder
+
+meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
+
+# filter out just warmx plots and irrigated controls
+anpp_warmx <- anpp_data %>% filter(Footprint == c("OC", "OR"))
+anpp_IR <- anpp_data %>% filter(Footprint == "IR" & Subplot == "C")
+
+# join the two data frames above together
+anpp_warmx1 <- full_join(anpp_warmx, anpp_IR)
+
+names(anpp_warmx1)[names(anpp_warmx1)=="Plot_ID"] <- "Unique_ID"
+anpp_warmx1 <- anpp_warmx1[,-9]
+meta <- meta[,-c(5,7,10)]
+
+anpp_warmx <- full_join(anpp_warmx1, meta, by = c("Unique_ID", "Subplot", "Treatment", "Replicate", "Footprint"))
+
+col_order1 <- c("Year", "Date", "Treatment", "Replicate", "Rep", "Footprint", "FP_location", "Subplot", "Subplot_location",
+               "Unique_ID", "Footprint_Treatment_full", "Subplot_Descriptions", "Scale_meter_square", "plant_biomass_gm2", 
+               "Species_Code", "Group_Code", "scientific_name", "common_name", "origin", "group", "family", "duration", 
+               "growth_habit")
+anpp_warmx <- anpp_warmx[,col_order1]
+
+#In 2023, plots were harvested at 0.2 and 0.8 areas. Below sums the 0.2 and 0.8 values for each unique subplot and species
+#and then adds those back into the anpp data set
+# filter out 2023 data
+anpp23 <- anpp_warmx %>% filter(Year == 2023)
+
+# create new data frame that sums the 0.2 and 0.8 values for each unique subplot and species
+anpp23_sum <- anpp23 %>%
+        group_by(Unique_ID, Species_Code) %>%
+        mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
+        distinct(Unique_ID, .keep_all = TRUE)
+
+anpp23_sum <- anpp23_sum[,-11] # remove scale column
+
+anpp23_sum$Scale_meter_square <- 1 # create scale column again and put "1" for all of them
+
+anpp_warmx <- full_join(anpp_warmx, anpp23_sum) # merge back with the anpp_warmx data frame
+
+# NOTE: After the previous step, for 2023 there's the 1.0, 0.2 and 0.8 scale data in the cleaned uploaded data set.
+# 0.2 and 0.8 were added together to create the 1.0 meter square scale data (so in a way there is duplicate data in the 2023 anpp data)
+
+# upload L1 data
+write.csv(anpp_warmx, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
+
