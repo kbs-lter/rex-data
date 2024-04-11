@@ -305,14 +305,15 @@ anpp23_sum <- anpp23 %>%
         mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
         distinct(Unique_ID, .keep_all = TRUE)
 
-anpp23_sum <- anpp23_sum[,-11] # remove scale column
+anpp23_sum <- anpp23_sum[,-13] # remove scale column
 
 anpp23_sum$Scale_meter_square <- 1 # create scale column again and put "1" for all of them
 
 anpp_warmx <- full_join(anpp_warmx, anpp23_sum) # merge back with the anpp_warmx data frame
 
 # NOTE: After the previous step, for 2023 there's the 1.0, 0.2 and 0.8 scale data in the cleaned uploaded data set.
-# 0.2 and 0.8 were added together to create the 1.0 meter square scale data (so in a way there is duplicate data in the 2023 anpp data)
+# 0.2 and 0.8 were added together to create the 1.0 meter square scale data 
+# (so in a way there is duplicate data in the 2023 anpp data)
 
 # upload L1 data
 write.csv(anpp_warmx, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
