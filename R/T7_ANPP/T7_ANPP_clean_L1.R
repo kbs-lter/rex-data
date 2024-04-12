@@ -316,5 +316,5 @@ anpp_warmx <- full_join(anpp_warmx, anpp23_sum) # merge back with the anpp_warmx
 # (so in a way there is duplicate data in the 2023 anpp data)
 
 # upload L1 data
-write.csv(anpp_warmx, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
+write.csv(anpp_warmx, file.path(dir,"T7_ANPP/L1/T7_warmx_ANPP_L1.csv"), row.names=F)
 
