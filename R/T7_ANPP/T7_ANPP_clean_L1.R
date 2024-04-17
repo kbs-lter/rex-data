@@ -323,14 +323,14 @@ anpp_warmx1 <- full_join(anpp_warmx, anpp_IR)
 
 names(anpp_warmx1)[names(anpp_warmx1)=="Plot_ID"] <- "Unique_ID"
 anpp_warmx1 <- anpp_warmx1[,-9] # remove "Experimental_Unit_ID"
-meta <- meta[,-c(5,7,10)]
+meta <- meta[,-c(5,10,13)] # remove "Footprint_Location", "Subplot_Location", "Unique_Field_Location_Code"
 
 anpp_warmx <- full_join(anpp_warmx1, meta, by = c("Unique_ID", "Subplot", "Treatment", "Replicate", "Footprint"))
 
 col_order1 <- c("Year", "Date", "Treatment", "Replicate", "Rep", "Footprint", "FP_location", "Subplot", "Subplot_location",
-               "Unique_ID", "Footprint_Treatment_full", "Subplot_Descriptions", "Scale_meter_square", "plant_biomass_gm2", 
-               "Species_Code", "Group_Code", "scientific_name", "common_name", "origin", "group", "family", "duration", 
-               "growth_habit")
+               "Unique_ID", "Footprint_Treatment_full", "Subplot_Descriptions", "Drought", "Warming", "Insecticide", 
+               "Scale_meter_square", "plant_biomass_gm2", "Species_Code", "Group_Code", "scientific_name", "common_name", 
+               "origin", "group", "family", "duration", "growth_habit")
 anpp_warmx <- anpp_warmx[,col_order1]
 
 #In 2023, plots were harvested at 0.2 and 0.8 areas. Below sums the 0.2 and 0.8 values for each unique subplot and species
