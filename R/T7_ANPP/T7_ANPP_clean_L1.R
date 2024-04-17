@@ -344,7 +344,7 @@ anpp23_sum <- anpp23 %>%
         mutate(plant_biomass_gm2 = sum(plant_biomass_gm2)) %>%
         distinct(Unique_ID, .keep_all = TRUE)
 
-anpp23_sum <- anpp23_sum[,-13] # remove scale column
+anpp23_sum <- anpp23_sum[,-16] # remove scale column
 
 anpp23_sum$Scale_meter_square <- 1 # create scale column again and put "1" for all of them
 
