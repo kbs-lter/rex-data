@@ -315,7 +315,7 @@ write.csv(anpp_data, file.path(dir,"T7_ANPP/L1/T7_ANPP_L1.csv"), row.names=F)
 meta <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
 
 # filter out just warmx plots and irrigated controls
-anpp_warmx <- anpp_data %>% filter(Footprint == c("OC", "OR"))
+anpp_warmx <- anpp_data %>% filter(Footprint %in% c("OC", "OR"))
 anpp_IR <- anpp_data %>% filter(Footprint == "IR" & Subplot == "C")
 
 # join the two data frames above together
@@ -345,6 +345,13 @@ anpp23_sum <- anpp23 %>%
         distinct(Unique_ID, .keep_all = TRUE)
 
 anpp23_sum <- anpp23_sum[,-16] # remove scale column
+
+# just checking to see if the total mean plant biomass from each plot makes sense
+anpp23total <- anpp23 %>% 
+        group_by(Unique_ID, Subplot_Descriptions) %>%
+        summarise(total_biomass_gm2 = sum(plant_biomass_gm2)) %>%
+        group_by(Subplot_Descriptions) %>%
+        summarise(average_total_biomass_gm2 = mean(total_biomass_gm2))
 
 anpp23_sum$Scale_meter_square <- 1 # create scale column again and put "1" for all of them
 
