@@ -248,10 +248,15 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 
 # create mapping/metadata file
 ```{r}
+# Set working directory from .Renviron
+dir <- Sys.getenv("DATA_DIR")
+list.files(dir)
+
 # read in data
-seq_metadata <- read.csv("/Users/moriahyoung/Downloads/metadata.csv")
-microbe_metadata <- read.csv("/Users/moriahyoung/Downloads/MY_REX_soil_microbes_2021_metadata.csv")
-warmx_metadata <- read.csv("/Users/moriahyoung/Downloads/REX_warmx_metadata.csv")
+seq_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/metadata.csv"))
+seq_metadata <- seq_metadata[,-c(7:12)]
+microbe_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/MY_REX_soil_microbes_2021_metadata.csv"))
+warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/REX_warmx_metadata.csv"))
 
 # merge files above
 seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
@@ -259,11 +264,7 @@ bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique
                                       "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
 
 # reorder columns
-bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence",
-                                                       "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep",
-                                                       "Footprint_Treatment_full", "Footprint", "Footprint_Location",
-                                                       "Subplot", "Subplot_Location", "Subplot_Descriptions",
-                                                       "Unique_ID", "Drought", "Datetime_UTC")]
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence", "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep", "Footprint_Treatment_full", "Footprint", "Footprint_Location", "Rep_Footprint", "Subplot", "Drought", "Warming", "Insecticide", "Subplot_Location", "Subplot_Descriptions", "Unique_ID", "sampling_period", "Datetime_UTC")]
 
 colnames(bacterial_2021_metadata)[1] <- "sampleid"
 
