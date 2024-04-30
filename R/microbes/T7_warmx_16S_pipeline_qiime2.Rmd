@@ -276,4 +276,46 @@ bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of li
 write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.csv", row.names = F)
 write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = ",", row.names = F)
 ```
+Cleaning and steps to make a phyloseq object
+```{r}
+# Read QZA files into dataframe, re-format taxonomic tables, and re-upload them as .csv files
+# Code below you only need to do once so it's # out as to not have to run every time
+SVs16S <- read_qza("/Users/moriahyoung/Downloads/16S-2021-merged-dada2table.qza")
+SVs16Stable <- SVs16S$data
+write.csv(SVs16Stable, file = "/Users/moriahyoung/Downloads/16S-merged-dada2table.csv")
+
+taxonomy16S <- read_qza("/Users/moriahyoung/Downloads/16S-taxonomy.qza")
+tax16S <- taxonomy16S$data %>% as_tibble() %>%
+  mutate(Taxon=gsub("[a-z]__", "", Taxon)) %>% 
+  separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))%>%
+  mutate(Phylum=replace_na(Phylum,"empty"))
+write.csv(tax16S, file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv", row.names =F)
+```
+
+Filter data
+```{r}
+# create phyloseq object
+data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-dada2table.csv",
+                                         taxonomy.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv",
+                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S_2021_metadata.csv")
+summarize_phyloseq(data_16S_unfiltered)
+
+# filter data
+
+# filter out non bacteria
+data_16S_uf1 <- subset_taxa(data_16S_unfiltered, Kingdom == "Bacteria" | Kingdom == "Archaea")
+data_16S_uf2 <- subset_taxa(data_16S_uf1, Kingdom != "Eukaryota")
+data_16S_uf3 <- subset_taxa(data_16S_uf2, Order != "Chloroplast")
+data_16S_uf4 <- subset_taxa(data_16S_uf3, Family != "Mitochondria")
+
+summarize_phyloseq(data_16S_uf4)
+
+# Remove samples with extremely low read depth 
+# data_16S_uf5 <- prune_samples(sample_sums(data_16S_uf4)>=1000, data_16S_uf4)
+
+# Export filtered data
+write.csv(data_16S_uf5@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered.csv")
+write.csv(data_16S_uf5@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered.csv")
+# upload these to REX google shared drive
+```
 
