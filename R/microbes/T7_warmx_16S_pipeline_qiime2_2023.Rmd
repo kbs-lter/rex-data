@@ -1,0 +1,96 @@
+---
+title: "Untitled"
+author: "Moriah Young"
+date: "2024-04-29"
+output: pdf_document
+---
+
+Import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
+```{bash}
+cd /mnt/home/youngmor/20240415_16SV4_PE250
+qiime tools import 
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path 20240415_16SV4_PE250_manifest.txt/ \
+--input-format PairedEndFastqManifestPhred33V2 \
+--output-path 20240415_16SV4_PE250.qza \
+
+# enter the code below in one string like this to run on the hpcc
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path 20240415_16SV4_PE250_manifest.txt --input-format PairedEndFastqManifestPhred33V2 --output-path 20240415_16SV4_PE250.qza
+
+````
+
+Denoise sequences using dada2
+```{bash}
+qiime demux summarize \
+--i-data 20240415_16SV4_PE250.qza \
+--o-visualization 20240415_16SV4_PE250_PE250_SUMMARY_VIZ.qzv
+qiime tools view 20240415_16SV4_PE250_PE250_SUMMARY_VIZ.qzv # https://view.qiime2.org/
+
+qiime demux summarize --i-data 20240415_16SV4_PE250.qza --o-visualization 20240415_16SV4_PE250_PE250_SUMMARY_VIZ.qzv
+```
+
+Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
+You can then drag and drop the .qzv file into this website: https://view.qiime2.org/ 
+You'll need to download it from the interactive interface onto your mac
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/20240415_16SV4_PE250
+qiime metadata tabulate \
+  --m-input-file 20240415_16SV4_PE250-denoising-stats.qza \
+  --o-visualization 20240415_16SV4_PE250-denoising-stats.qzv
+  
+qiime metadata tabulate --m-input-file 20240415_16SV4_PE250-denoising-stats.qza --o-visualization 20240415_16SV4_PE250-denoising-stats.qzv
+```
+
+# Training a classifier
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5069754/ # primers
+```{bash}
+cd /mnt/home/youngmor/20240415_16SV4_PE250
+# test the classifier
+qiime feature-classifier classify-sklearn \
+  --i-classifier classifier.qza \
+  --i-reads 20240415_16SV4_PE250-rep-seqs.qza \
+  --o-classification 16S-taxonomy-2023.qza
+
+qiime feature-classifier classify-sklearn --i-classifier classifier.qza --i-reads 20240415_16SV4_PE250-rep-seqs.qza --o-classification 16S-taxonomy-2023.qza
+
+# visualize
+qiime metadata tabulate \
+  --m-input-file 16S-taxonomy-2023.qza \
+  --o-visualization 16S-taxonomy-2023.qzv
+
+# testing the classifier and creating the .qzv file took 7 hours on the hpcc (using the same SLURM code/settings as the denoising script above)
+  
+qiime metadata tabulate --m-input-file 16S-taxonomy-2023.qza --o-visualization 16S-taxonomy-2023.qzv
+```
+
+# create mapping/metadata file
+```{r}
+# read in data
+seq_metadata <- read.csv("/Users/moriahyoung/Downloads/metadata.csv")
+microbe_metadata <- read.csv("/Users/moriahyoung/Downloads/MY_REX_soil_microbes_2021_metadata.csv")
+warmx_metadata <- read.csv("/Users/moriahyoung/Downloads/REX_warmx_metadata.csv")
+
+# merge files above
+seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
+bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
+                                      "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
+
+# reorder columns
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence",
+                                                       "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep",
+                                                       "Footprint_Treatment_full", "Footprint", "Footprint_Location",
+                                                       "Subplot", "Subplot_Location", "Subplot_Descriptions",
+                                                       "Unique_ID", "Drought", "Datetime_UTC")]
+
+colnames(bacterial_2021_metadata)[1] <- "sampleid"
+
+# get rid of controls
+bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
+bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+
+# write a new csv with the cleaned and merge data 
+write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.csv", row.names = F)
+write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = ",", row.names = F)
+```
+
