@@ -17,15 +17,12 @@ list.files(dir)
 library(tidyverse)
 
 # Read in data
-soil <- read.csv(file.path(dir, "sensors/L0/REX_volumetric_soil_moisture_L0.csv"))[27:1048575,]
+soil <- read.csv(file.path(dir, "sensors/L0/REX_soil_probe_download_May2024.csv"))
 meta_rex <- read.csv(file.path(dir, "REX_template.csv"))
 meta_warmx <- read.csv(file.path(dir, "REX_warmx_metadata.csv"))
 
 # fix header
-soil <- soil[-2,]
-names(soil) <- soil[1,]
 soil <- soil[-1,]
-str(soil)
 
 # convert date + time column to POSIX
 soil$sample_datetime <- as.POSIXct(soil$sample_datetime,tryFormats = c("%Y-%m-%d %H:%M:%S"), tz="UTC")
