@@ -66,31 +66,90 @@ qiime metadata tabulate --m-input-file 16S-taxonomy-2023.qza --o-visualization 1
 
 # create mapping/metadata file
 ```{r}
+# Set working directory from .Renviron
+dir <- Sys.getenv("DATA_DIR")
+list.files(dir)
+
+library(tidyverse)
+
 # read in data
-seq_metadata <- read.csv("/Users/moriahyoung/Downloads/metadata.csv")
-microbe_metadata <- read.csv("/Users/moriahyoung/Downloads/MY_REX_soil_microbes_2021_metadata.csv")
-warmx_metadata <- read.csv("/Users/moriahyoung/Downloads/REX_warmx_metadata.csv")
+microbe_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2023/files to create REX 16S 2023 metadata/MY_REX_soil_microbes_2023_metadata.csv"))
+warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2023/files to create REX 16S 2023 metadata/REX_warmx_metadata.csv"))
+
+# rename columns to match each other
+names(microbe_metadata)[names(microbe_metadata) == "Plot_ID"] <- "Unique_ID"
+names(microbe_metadata)[names(microbe_metadata) == "FP_location"] <- "Footprint_Location"
+names(microbe_metadata)[names(microbe_metadata) == "Subplot_location"] <- "Subplot_Location"
 
 # merge files above
-seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
-bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
+bacterial_2023_metadata <- full_join(microbe_metadata, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
                                       "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
 
-# reorder columns
-bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence",
-                                                       "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep",
-                                                       "Footprint_Treatment_full", "Footprint", "Footprint_Location",
-                                                       "Subplot", "Subplot_Location", "Subplot_Descriptions",
-                                                       "Unique_ID", "Drought", "Datetime_UTC")]
+# delete columns
+# Unique_Field_Location_Code, Experimental_Unit_ID
+bacterial_2023_metadata <- subset(bacterial_2023_metadata, select = -c(Unique_Field_Location_Code, Experimental_Unit_ID, Footprint_ID))
 
-colnames(bacterial_2021_metadata)[1] <- "sampleid"
+# reorder columns
+bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "Treatment", "Replicate", "Rep", "Footprint",
+                                                       "Footprint_Location", "Rep_Footprint", "Footprint_Treatment_full",
+                                                       "Subplot", "Subplot_Location", "Drought", "Warming",
+                                                       "Insecticide", "Subplot_Descriptions",
+                                                       "Unique_ID", "Date")]
+
+colnames(bacterial_2023_metadata)[1] <- "sampleid"
 
 # get rid of controls
-bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
-bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+#bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
+#bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
 
 # write a new csv with the cleaned and merge data 
-write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.csv", row.names = F)
-write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = ",", row.names = F)
+write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2023_metadata.csv", row.names = F)
+#write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = #",", row.names = F)
 ```
+
+Cleaning and steps to make a phyloseq object
+```{r}
+# Read QZA files into dataframe, re-format taxonomic tables, and re-upload them as .csv files
+# Code below you only need to do once
+SVs16S <- read_qza("/Users/moriahyoung/Downloads/16S-2021-merged-dada2table.qza")
+SVs16Stable <- SVs16S$data
+write.csv(SVs16Stable, file = "/Users/moriahyoung/Downloads/16S-merged-dada2table.csv")
+
+taxonomy16S <- read_qza("/Users/moriahyoung/Downloads/16S-taxonomy.qza")
+tax16S <- taxonomy16S$data %>% as_tibble() %>%
+  mutate(Taxon=gsub("[a-z]__", "", Taxon)) %>% 
+  separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))%>%
+  mutate(Phylum=replace_na(Phylum,"empty"))
+write.csv(tax16S, file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv", row.names =F)
+```
+
+Filter data
+```{r}
+# create phyloseq object
+data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-dada2table.csv",
+                                         taxonomy.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv",
+                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S_2021_metadata.csv")
+summarize_phyloseq(data_16S_unfiltered)
+
+# filter data
+
+# filter out non bacteria
+data_16S_uf1 <- subset_taxa(data_16S_unfiltered, Kingdom == "Bacteria" | Kingdom == "Archaea")
+data_16S_uf2 <- subset_taxa(data_16S_uf1, Kingdom != "Eukaryota")
+data_16S_uf3 <- subset_taxa(data_16S_uf2, Order != "Chloroplast")
+data_16S_uf4 <- subset_taxa(data_16S_uf3, Family != "Mitochondria")
+
+summarize_phyloseq(data_16S_uf4)
+
+# Remove samples with extremely low read depth 
+# data_16S_uf5 <- prune_samples(sample_sums(data_16S_uf4)>=1000, data_16S_uf4)
+
+# Export filtered data
+write.csv(data_16S_uf5@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered.csv")
+write.csv(data_16S_uf5@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered.csv")
+# upload these to REX google shared drive
+# update path
+write.csv(data_16S_uf5@tax_table, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), row.names=F)
+```
+
 
