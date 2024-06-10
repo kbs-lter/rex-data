@@ -96,6 +96,24 @@ bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "Treatment",
                                                        "Insecticide", "Subplot_Descriptions",
                                                        "Unique_ID", "Date")]
 
+seq_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2023/files to create REX 16S 2023 metadata/sequence_2023_metadata.csv"))
+
+# rename columns to match each other
+names(seq_metadata)[names(seq_metadata) == "Sample_ID"] <- "RTSF_SampleID"
+names(seq_metadata)[names(seq_metadata) == "Sample.Name"] <- "Sample_ID"
+
+bacterial_2023_metadata <- full_join(seq_metadata, bacterial_2023_metadata, by = "Sample_ID")
+
+# reorder columns
+bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "RTSF_SampleID", "Barcode",
+                                                       "LinkerPrimerSequence", "Reverse_Primer", 
+                                                       "MiSeqRun", "Treatment", "Replicate", 
+                                                       "Rep", "Footprint", "Footprint_Location", 
+                                                       "Rep_Footprint", "Footprint_Treatment_full",
+                                                       "Subplot", "Subplot_Location", "Drought", "Warming",
+                                                       "Insecticide", "Subplot_Descriptions",
+                                                       "Unique_ID", "Date")]
+
 colnames(bacterial_2023_metadata)[1] <- "sampleid"
 
 # get rid of controls
@@ -103,35 +121,36 @@ colnames(bacterial_2023_metadata)[1] <- "sampleid"
 #bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
 
 # write a new csv with the cleaned and merge data 
-write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2023_metadata.csv", row.names = F)
-#write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/bacterial_2021_metadata.tsv", quote = F, sep = #",", row.names = F)
+write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Downloads/bacterial_2023_metadata.csv", row.names = F)
+#write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Downloads/bacterial_2021_metadata.tsv", quote = F, sep = #",", row.names = F)
 ```
 
 Cleaning and steps to make a phyloseq object
 ```{r}
+library(qiime2R)
 # Read QZA files into dataframe, re-format taxonomic tables, and re-upload them as .csv files
 # Code below you only need to do once
-SVs16S <- read_qza("/Users/moriahyoung/Downloads/16S-2021-merged-dada2table.qza")
+SVs16S <- read_qza("/Users/moriahyoung/Downloads/16S-2023-dada2table.qza")
 SVs16Stable <- SVs16S$data
-write.csv(SVs16Stable, file = "/Users/moriahyoung/Downloads/16S-merged-dada2table.csv")
+write.csv(SVs16Stable, file = "/Users/moriahyoung/Downloads/16S-2023-dada2table.csv")
 
-taxonomy16S <- read_qza("/Users/moriahyoung/Downloads/16S-taxonomy.qza")
+taxonomy16S <- read_qza("/Users/moriahyoung/Downloads/16S-2023-taxonomy.qza")
 tax16S <- taxonomy16S$data %>% as_tibble() %>%
   mutate(Taxon=gsub("[a-z]__", "", Taxon)) %>% 
   separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))%>%
   mutate(Phylum=replace_na(Phylum,"empty"))
-write.csv(tax16S, file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv", row.names =F)
+write.csv(tax16S, file = "/Users/moriahyoung/Downloads/16S-2023-taxonomy.csv", row.names =F)
 ```
 
 Filter data
 ```{r}
+library(phyloseq)
+library(microbiome)
 # create phyloseq object
-data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-dada2table.csv",
-                                         taxonomy.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy.csv",
-                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S_2021_metadata.csv")
+data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Downloads/16S-2023-dada2table.csv",
+                                         taxonomy.file = "/Users/moriahyoung/Downloads/16S-2023-taxonomy.csv",
+                                         metadata.file = "/Users/moriahyoung/Downloads/bacterial_2023_metadata.csv")
 summarize_phyloseq(data_16S_unfiltered)
-
-# filter data
 
 # filter out non bacteria
 data_16S_uf1 <- subset_taxa(data_16S_unfiltered, Kingdom == "Bacteria" | Kingdom == "Archaea")
