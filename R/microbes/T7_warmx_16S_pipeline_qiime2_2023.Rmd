@@ -1,9 +1,25 @@
 ---
-title: "Untitled"
+title: "2023 16S Pipeline"
 author: "Moriah Young"
 date: "2024-04-29"
 output: pdf_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{bash}
+#load anaconda
+module load Conda/3
+
+#activate qiime2
+conda activate qiime2-2022.11
+
+# random notes
+# Ctrl + C to stop a process running on a terminal
+#SBATCH --output=~/%x-%j.slurmout # x is job name and j is job number and the outputs will go here
+```
 
 Import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
 ```{bash}
