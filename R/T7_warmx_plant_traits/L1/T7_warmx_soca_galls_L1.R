@@ -4,7 +4,7 @@
 # DATA INPUT:     Data imported as csv files from shared REX Google drive T7_warmx_plant_traits L0 folder
 # DATA OUTPUT:    Clean L1 data uploaded to T7_warmx_plant_traits L1 folder
 # PROJECT:        REX
-# DATE:           July 2021; updated Jan 2022
+# DATE:           July 2021; updated June 2024
 
 # Clear all existing data
 rm(list=ls())
