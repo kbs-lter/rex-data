@@ -128,7 +128,7 @@ bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "RTSF_Sample
                                                        "Rep_Footprint", "Footprint_Treatment_full",
                                                        "Subplot", "Subplot_Location", "Drought", "Warming",
                                                        "Insecticide", "Subplot_Descriptions",
-                                                       "Unique_ID", "Date")]
+                                                       "Unique_ID", "Date", "Sample_or_Control")]
 
 colnames(bacterial_2023_metadata)[1] <- "sampleid"
 
@@ -187,4 +187,49 @@ write.csv(data_16S_uf5@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16
 write.csv(data_16S_uf5@tax_table, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), row.names=F)
 ```
 
+Removing contaminants
+```{r}
+# https://benjjneb.github.io/decontam/vignettes/decontam_intro.html
+library(devtools)
+library(processx)
+devtools::install_github("benjjneb/decontam", force = TRUE)
+# Install decontam package which will be used to remove potential contaminants 
+# by checking abundance distributions in negative controls vs regular samples
+library(decontam) 
+```
+
+```{r}
+# from https://github.com/longleyr/Management-of-Soybean-Code-and-Files/blob/master/fungi_analysis_script.R
+
+# check library size distribution
+write.csv(sample_data(physeq_object_soil), file = "sample_check1_soil.csv")
+df_soil <- as.data.frame(sample_data(physeq_object_soil)) # Put sample_data into a ggplot-friendly data.frame
+df_soil$LibrarySize_soil <- sample_sums(physeq_object_soil)
+df_soil <- df_soil[order(df_soil$LibrarySize_soil),]
+df_soil$Index <- seq(nrow(df_soil))
+write.csv(df_soil, file = "rank_sums_soil.csv")
+ggplot(data=df_soil, aes(x=Index, y=LibrarySize_soil, color=Sample_or_Control)) + geom_point()
+
+# filter by prevelance 
+sample_data(physeq_object_soil)$is.neg <- sample_data(physeq_object_soil)$Sample_or_Control == "Control Sample"
+
+contamdf.prev_soil <- isContaminant(physeq_object_soil, method="prevalence", neg="is.neg")
+table(contamdf.prev_soil$contaminant)
+
+# Make phyloseq object of presence-absence in negative controls and true samples
+ps.pa_soil <- transform_sample_counts(physeq_object_soil, function(abund) 1*(abund>0))
+ps.pa.neg_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "Control Sample", ps.pa_soil)
+ps.pa.pos_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "True Sample", ps.pa_soil)
+
+# Make data.frame of prevalence in positive and negative samples
+df.pa_soil <- data.frame(pa.pos_soil=taxa_sums(ps.pa.pos_soil), pa.neg_soil=taxa_sums(ps.pa.neg_soil),
+                          contaminant=contamdf.prev_soil$contaminant)
+ggplot(data=df.pa_soil, aes(x=pa.neg_soil, y=pa.pos_soil, color=contaminant)) + geom_point() +
+  xlab("Prevalence (Negative Controls)") + ylab("Prevalence (True Samples)")
+
+# remove contaminants
+ps.noncontam_soil <- prune_taxa(!contamdf.prev_soil$contaminant, physeq_object_soil)
+# with contaminants removed
+otu_table(ps.noncontam_soil)
+```
 
