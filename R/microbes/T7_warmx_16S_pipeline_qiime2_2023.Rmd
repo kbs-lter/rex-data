@@ -3,6 +3,8 @@ title: "2023 16S Pipeline"
 author: "Moriah Young"
 date: "2024-04-29"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -132,6 +134,9 @@ bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "RTSF_Sample
 
 colnames(bacterial_2023_metadata)[1] <- "sampleid"
 
+# removing rows that aren't control samples or true samples
+bacterial_2023_metadata <- bacterial_2023_metadata[-c(236,241),]
+
 # get rid of controls
 #bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
 #bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
@@ -179,12 +184,18 @@ summarize_phyloseq(data_16S_uf4)
 # Remove samples with extremely low read depth 
 # data_16S_uf5 <- prune_samples(sample_sums(data_16S_uf4)>=1000, data_16S_uf4)
 
-# Export filtered data
-write.csv(data_16S_uf5@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered.csv")
-write.csv(data_16S_uf5@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered.csv")
+# Export filtered data to desktop AND REX google shared drive
+# upload to desktop
+# otu table
+write.csv(data_16S_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered.csv")
+# taxonomy table
+write.csv(data_16S_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered.csv")
+
 # upload these to REX google shared drive
-# update path
-write.csv(data_16S_uf5@tax_table, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), row.names=F)
+# otu table
+write.csv(data_16S_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-merged-table-filtered.csv"), row.names=F)
+# taxonomy table
+write.csv(data_16S_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-taxonomy-filtered.csv"), row.names=F)
 ```
 
 Removing contaminants
@@ -192,7 +203,7 @@ Removing contaminants
 # https://benjjneb.github.io/decontam/vignettes/decontam_intro.html
 library(devtools)
 library(processx)
-devtools::install_github("benjjneb/decontam", force = TRUE)
+#devtools::install_github("benjjneb/decontam", force = TRUE)
 # Install decontam package which will be used to remove potential contaminants 
 # by checking abundance distributions in negative controls vs regular samples
 library(decontam) 
@@ -201,23 +212,26 @@ library(decontam)
 ```{r}
 # from https://github.com/longleyr/Management-of-Soybean-Code-and-Files/blob/master/fungi_analysis_script.R
 
+# rename phyloseq object name from above
+phyloseq_soil <- data_16S_uf4
+
 # check library size distribution
-write.csv(sample_data(physeq_object_soil), file = "sample_check1_soil.csv")
-df_soil <- as.data.frame(sample_data(physeq_object_soil)) # Put sample_data into a ggplot-friendly data.frame
-df_soil$LibrarySize_soil <- sample_sums(physeq_object_soil)
+#write.csv(sample_data(phyloseq_soil), file = "sample_check1_soil.csv") # probably can delete
+df_soil <- as.data.frame(sample_data(phyloseq_soil)) # Put sample_data into a ggplot-friendly data.frame
+df_soil$LibrarySize_soil <- sample_sums(phyloseq_soil)
 df_soil <- df_soil[order(df_soil$LibrarySize_soil),]
 df_soil$Index <- seq(nrow(df_soil))
-write.csv(df_soil, file = "rank_sums_soil.csv")
+#write.csv(df_soil, file = "rank_sums_soil.csv") # probably can delete
 ggplot(data=df_soil, aes(x=Index, y=LibrarySize_soil, color=Sample_or_Control)) + geom_point()
 
 # filter by prevelance 
-sample_data(physeq_object_soil)$is.neg <- sample_data(physeq_object_soil)$Sample_or_Control == "Control Sample"
+sample_data(phyloseq_soil)$is.neg <- sample_data(phyloseq_soil)$Sample_or_Control == "Control Sample"
 
-contamdf.prev_soil <- isContaminant(physeq_object_soil, method="prevalence", neg="is.neg")
+contamdf.prev_soil <- isContaminant(phyloseq_soil, method="prevalence", neg="is.neg")
 table(contamdf.prev_soil$contaminant)
 
 # Make phyloseq object of presence-absence in negative controls and true samples
-ps.pa_soil <- transform_sample_counts(physeq_object_soil, function(abund) 1*(abund>0))
+ps.pa_soil <- transform_sample_counts(phyloseq_soil, function(abund) 1*(abund>0))
 ps.pa.neg_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "Control Sample", ps.pa_soil)
 ps.pa.pos_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "True Sample", ps.pa_soil)
 
@@ -228,8 +242,22 @@ ggplot(data=df.pa_soil, aes(x=pa.neg_soil, y=pa.pos_soil, color=contaminant)) + 
   xlab("Prevalence (Negative Controls)") + ylab("Prevalence (True Samples)")
 
 # remove contaminants
-ps.noncontam_soil <- prune_taxa(!contamdf.prev_soil$contaminant, physeq_object_soil)
+ps.noncontam_soil <- prune_taxa(!contamdf.prev_soil$contaminant, phyloseq_soil)
 # with contaminants removed
 otu_table(ps.noncontam_soil)
+
+# Export the now filtered & non contaminated data to desktop AND the REX shared google drive
+# to desktop
+# otu table
+write.csv(ps.noncontam_soil@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered-noncontam.csv")
+# taxonomy table
+write.csv(ps.noncontam_soil@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered-noncontam.csv")
+
+# upload these to REX google shared drive
+# update path
+# otu table
+write.csv(ps.noncontam_soil@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-merged-table-filtered-noncontam.csv"), row.names=F)
+# taxonomy table
+write.csv(ps.noncontam_soil@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-taxonomy-filtered-noncontam.csv"), row.names=F)
 ```
 
