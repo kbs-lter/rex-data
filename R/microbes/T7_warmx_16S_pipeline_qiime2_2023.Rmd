@@ -142,7 +142,7 @@ bacterial_2023_metadata <- bacterial_2023_metadata[-c(236,241),]
 #bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
 
 # write a new csv with the cleaned and merge data 
-write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Downloads/bacterial_2023_metadata.csv", row.names = F)
+write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial_2023_metadata.csv", row.names = F)
 #write.table(bacterial_2021_metadata, file = "/Users/moriahyoung/Downloads/bacterial_2021_metadata.tsv", quote = F, sep = #",", row.names = F)
 ```
 
@@ -170,7 +170,7 @@ library(microbiome)
 # create phyloseq object
 data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Downloads/16S-2023-dada2table.csv",
                                          taxonomy.file = "/Users/moriahyoung/Downloads/16S-2023-taxonomy.csv",
-                                         metadata.file = "/Users/moriahyoung/Downloads/bacterial_2023_metadata.csv")
+                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial_2023_metadata.csv")
 summarize_phyloseq(data_16S_unfiltered)
 
 # filter out non bacteria
@@ -187,15 +187,15 @@ summarize_phyloseq(data_16S_uf4)
 # Export filtered data to desktop AND REX google shared drive
 # upload to desktop
 # otu table
-write.csv(data_16S_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered.csv")
+write.csv(data_16S_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-table-filtered.csv")
 # taxonomy table
-write.csv(data_16S_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered.csv")
+write.csv(data_16S_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-taxonomy-filtered.csv")
 
 # upload these to REX google shared drive
 # otu table
-write.csv(data_16S_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-merged-table-filtered.csv"), row.names=F)
+write.csv(data_16S_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-table-filtered.csv"), row.names=F)
 # taxonomy table
-write.csv(data_16S_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-taxonomy-filtered.csv"), row.names=F)
+write.csv(data_16S_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-taxonomy-filtered.csv"), row.names=F)
 ```
 
 Removing contaminants
@@ -210,7 +210,7 @@ library(decontam)
 ```
 
 ```{r}
-# from https://github.com/longleyr/Management-of-Soybean-Code-and-Files/blob/master/fungi_analysis_script.R
+# help from https://github.com/longleyr/Management-of-Soybean-Code-and-Files/blob/master/fungi_analysis_script.R
 
 # rename phyloseq object name from above
 phyloseq_soil <- data_16S_uf4
@@ -224,7 +224,7 @@ df_soil$Index <- seq(nrow(df_soil))
 #write.csv(df_soil, file = "rank_sums_soil.csv") # probably can delete
 ggplot(data=df_soil, aes(x=Index, y=LibrarySize_soil, color=Sample_or_Control)) + geom_point()
 
-# filter by prevelance 
+# filter by prevalence 
 sample_data(phyloseq_soil)$is.neg <- sample_data(phyloseq_soil)$Sample_or_Control == "Control Sample"
 
 contamdf.prev_soil <- isContaminant(phyloseq_soil, method="prevalence", neg="is.neg")
@@ -249,15 +249,15 @@ otu_table(ps.noncontam_soil)
 # Export the now filtered & non contaminated data to desktop AND the REX shared google drive
 # to desktop
 # otu table
-write.csv(ps.noncontam_soil@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-merged-table-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-table-filtered-noncontam.csv")
 # taxonomy table
-write.csv(ps.noncontam_soil@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-taxonomy-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-taxonomy-filtered-noncontam.csv")
 
 # upload these to REX google shared drive
 # update path
 # otu table
-write.csv(ps.noncontam_soil@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-merged-table-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-table-filtered-noncontam.csv"), row.names=F)
 # taxonomy table
-write.csv(ps.noncontam_soil@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-taxonomy-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-taxonomy-filtered-noncontam.csv"), row.names=F)
 ```
 
