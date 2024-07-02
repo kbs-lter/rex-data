@@ -246,18 +246,21 @@ ps.noncontam_soil <- prune_taxa(!contamdf.prev_soil$contaminant, phyloseq_soil)
 # with contaminants removed
 otu_table(ps.noncontam_soil)
 
+# remove controls
+ps.noncontam_soil1 = subset_samples(ps.noncontam_soil, Sample_or_Control == "True Sample")
+
 # Export the now filtered & non contaminated data to desktop AND the REX shared google drive
 # to desktop
 # otu table
-write.csv(ps.noncontam_soil@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-table-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil1@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-table-filtered-noncontam.csv")
 # taxonomy table
-write.csv(ps.noncontam_soil@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-taxonomy-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil1@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-taxonomy-filtered-noncontam.csv")
 
 # upload these to REX google shared drive
 # update path
 # otu table
-write.csv(ps.noncontam_soil@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-table-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil1@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-table-filtered-noncontam.csv"), row.names=F)
 # taxonomy table
-write.csv(ps.noncontam_soil@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-taxonomy-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil1@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-taxonomy-filtered-noncontam.csv"), row.names=F)
 ```
 
