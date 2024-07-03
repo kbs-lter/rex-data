@@ -82,6 +82,49 @@ qiime metadata tabulate \
 qiime metadata tabulate --m-input-file 16S-taxonomy-2023.qza --o-visualization 16S-taxonomy-2023.qzv
 ```
 
+# Generate a phylogenetic tree
+https://docs.qiime2.org/2023.2/tutorials/phylogeny/#root-the-phylogeny
+```{bash}
+cd /mnt/home/youngmor/20240415_16SV4_PE250/
+
+# this aligns your sequences
+qiime alignment mafft \
+  --i-sequences 16S-2023-rep-seqs.qza \
+  --o-alignment 16S-2023-aligned-rep-seqs.qza
+  
+qiime alignment mafft --i-sequences 16S-2023-rep-seqs.qza --o-alignment 16S-2023-aligned-rep-seqs.qza
+  
+qiime alignment mask \
+  --i-alignment 16S-2023-aligned-rep-seqs.qza \
+  --o-masked-alignment 16S-2023-masked-aligned-rep-seqs.qza
+  
+qiime alignment mask --i-alignment 16S-2023-aligned-rep-seqs.qza --o-masked-alignment 16S-2023-masked-aligned-rep-seqs.qza
+
+# make the tree
+# using fasttree
+qiime phylogeny fasttree \
+  --i-alignment 16S-2023-masked-aligned-rep-seqs.qza \
+  --o-tree 16S-2023-fasttree-unrooted-tree.qza
+  --verbose
+  
+qiime phylogeny fasttree --i-alignment 16S-2023-masked-aligned-rep-seqs.qza --o-tree 16S-2023-fasttree-tree.qza --verbose
+
+#root the tree using the longest root
+qiime phylogeny midpoint-root \
+  --i-tree 16S-2023-fasttree-unrooted-tree.qza \
+  --o-rooted-tree 16S-2023-fasttree-rooted-tree.qza
+
+qiime phylogeny midpoint-root --i-tree 16S-2023-fasttree-unrooted-tree.qza --o-rooted-tree 16S-2023-fasttree-rooted-tree.qza
+
+
+# code below worth trying in the future - I think it's supposed to do all the steps above
+------------
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs.qza \
+  --output-dir mafft-fasttree-output
+-------------
+```
+
 # create mapping/metadata file
 ```{r}
 # Set working directory from .Renviron
