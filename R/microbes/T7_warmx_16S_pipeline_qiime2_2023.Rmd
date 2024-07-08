@@ -127,6 +127,9 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 
 # create mapping/metadata file
 ```{r}
+# Clear all existing data
+rm(list=ls())
+
 # Set working directory from .Renviron
 dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
@@ -141,21 +144,22 @@ warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2023/f
 names(microbe_metadata)[names(microbe_metadata) == "Plot_ID"] <- "Unique_ID"
 names(microbe_metadata)[names(microbe_metadata) == "FP_location"] <- "Footprint_Location"
 names(microbe_metadata)[names(microbe_metadata) == "Subplot_location"] <- "Subplot_Location"
+names(microbe_metadata)[names(microbe_metadata) == "Subplot_ID"] <- "Sample_ID"
 
 # merge files above
 bacterial_2023_metadata <- full_join(microbe_metadata, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
                                       "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
 
 # delete columns
-# Unique_Field_Location_Code, Experimental_Unit_ID
-bacterial_2023_metadata <- subset(bacterial_2023_metadata, select = -c(Unique_Field_Location_Code, Experimental_Unit_ID, Footprint_ID))
+# Unique_Field_Location_Code
+bacterial_2023_metadata <- subset(bacterial_2023_metadata, select = -c(Unique_Field_Location_Code))
 
 # reorder columns
 bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "Treatment", "Replicate", "Rep", "Footprint",
                                                        "Footprint_Location", "Rep_Footprint", "Footprint_Treatment_full",
                                                        "Subplot", "Subplot_Location", "Drought", "Warming",
                                                        "Insecticide", "Subplot_Descriptions",
-                                                       "Unique_ID", "Date")]
+                                                       "Unique_ID", "sampling_period")]
 
 seq_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2023/files to create REX 16S 2023 metadata/sequence_2023_metadata.csv"))
 
@@ -173,7 +177,7 @@ bacterial_2023_metadata <- bacterial_2023_metadata[, c("Sample_ID", "RTSF_Sample
                                                        "Rep_Footprint", "Footprint_Treatment_full",
                                                        "Subplot", "Subplot_Location", "Drought", "Warming",
                                                        "Insecticide", "Subplot_Descriptions",
-                                                       "Unique_ID", "Date", "Sample_or_Control")]
+                                                       "Unique_ID", "sampling_period", "Sample_or_Control")]
 
 colnames(bacterial_2023_metadata)[1] <- "sampleid"
 
