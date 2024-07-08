@@ -184,9 +184,8 @@ colnames(bacterial_2023_metadata)[1] <- "sampleid"
 # removing rows that aren't control samples or true samples
 bacterial_2023_metadata <- bacterial_2023_metadata[-c(236,241),]
 
-# get rid of controls
-#bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
-#bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+# add year column
+bacterial_2023_metadata <- bacterial_2023_metadata %>% mutate(Year = 2023)
 
 # write a new csv with the cleaned and merge data 
 write.csv(bacterial_2023_metadata, file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial_2023_metadata.csv", row.names = F)

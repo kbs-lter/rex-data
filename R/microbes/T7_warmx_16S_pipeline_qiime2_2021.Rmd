@@ -275,6 +275,9 @@ bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RTSF_SampleI
 
 colnames(bacterial_2021_metadata)[1] <- "sampleid"
 
+# add year column
+bacterial_2021_metadata <- bacterial_2021_metadata %>% mutate(Year = 2021)
+
 # get rid of controls
 #bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
 #bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
@@ -363,7 +366,7 @@ table(contamdf.prev_soil$contaminant)
 
 # Make phyloseq object of presence-absence in negative controls and true samples
 ps.pa_soil <- transform_sample_counts(phyloseq_soil, function(abund) 1*(abund>0))
-ps.pa.neg_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "Control Sample", ps.pa_soil)
+ps.pa.neg_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "Control Sample", ps.pa_soil) # no contaminants then?
 ps.pa.pos_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "True Sample", ps.pa_soil)
 
 # Make data.frame of prevalence in positive and negative samples
