@@ -271,7 +271,7 @@ bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique
 bacterial_2021_metadata <- subset(bacterial_2021_metadata, select = -c(Unique_Field_Location_Code))
 
 # reorder columns
-bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence", "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep", "Footprint_Treatment_full", "Footprint", "Footprint_Location", "Rep_Footprint", "Subplot", "Drought", "Warming", "Insecticide", "Subplot_Location", "Subplot_Descriptions", "Unique_ID", "sampling_period", "Sample_or_Control")]
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RTSF_SampleID", "Barcode", "LinkerPrimerSequence", "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep", "Footprint_Treatment_full", "Footprint", "Footprint_Location", "Rep_Footprint", "Subplot", "Drought", "Warming", "Insecticide", "Subplot_Location", "Subplot_Descriptions", "Unique_ID", "sampling_period", "Sample_or_Control")]
 
 colnames(bacterial_2021_metadata)[1] <- "sampleid"
 
