@@ -248,14 +248,16 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 
 # create mapping/metadata file
 ```{r}
+# Clear all existing data
+rm(list=ls())
+
 library(tidyverse)
 # Set working directory from .Renviron
 dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
 
 # read in data
-seq_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/metadata.csv"))
-seq_metadata <- seq_metadata[,-c(7:12)]
+seq_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/sequence_2021_metadata.csv"))
 microbe_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/MY_REX_soil_microbes_2021_metadata.csv"))
 warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/2021/files to create REX 16S 2021 metadata/REX_warmx_metadata.csv"))
 
@@ -264,17 +266,21 @@ seq_microbe <- full_join(seq_metadata, microbe_metadata, by = "SampleID")
 bacterial_2021_metadata <- full_join(seq_microbe, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
                                       "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
 
+# delete columns
+# Unique_Field_Location_Code
+bacterial_2021_metadata <- subset(bacterial_2021_metadata, select = -c(Unique_Field_Location_Code))
+
 # reorder columns
-bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence", "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep", "Footprint_Treatment_full", "Footprint", "Footprint_Location", "Rep_Footprint", "Subplot", "Drought", "Warming", "Insecticide", "Subplot_Location", "Subplot_Descriptions", "Unique_ID", "sampling_period", "Datetime_UTC")]
+bacterial_2021_metadata <- bacterial_2021_metadata[, c("SampleID", "RSTF_SampleID", "Barcode", "LinkerPrimerSequence", "Reverse_Primer", "MiSeqRun", "Treatment", "Replicate", "Rep", "Footprint_Treatment_full", "Footprint", "Footprint_Location", "Rep_Footprint", "Subplot", "Drought", "Warming", "Insecticide", "Subplot_Location", "Subplot_Descriptions", "Unique_ID", "sampling_period", "Sample_or_Control")]
 
 colnames(bacterial_2021_metadata)[1] <- "sampleid"
 
 # get rid of controls
 #bacterial_2021_metadata <- bacterial_2021_metadata[!grepl("CONTROL", bacterial_2021_metadata$sampleid),]
-bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
+#bacterial_2021_metadata <- bacterial_2021_metadata %>% na.omit() # get rid of line 227 which is sample 36 (sample not submitted to RTSF)
 
 # write a new csv with the cleaned and merge data 
-write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial-2021-metadata.csv", row.names = F)
+write.csv(bacterial_2021_metadata, file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial_2021_metadata.csv", row.names = F)
 ```
 
 Cleaning and steps to make a phyloseq object
@@ -301,7 +307,7 @@ library(microbiome)
 # create phyloseq object
 data_16S_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-2021-merged-table.csv",
                                          taxonomy.file = "/Users/moriahyoung/Desktop/phyloseq_object/16S-2021-taxonomy.csv",
-                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial-2021-metadata.csv")
+                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/bacterial_2021_metadata.csv")
 summarize_phyloseq(data_16S_unfiltered)
 
 # filter data
@@ -377,15 +383,15 @@ ps.noncontam_soil1 = subset_samples(ps.noncontam_soil, Sample_or_Control == "Tru
 # Export the now filtered & non contaminated data to desktop AND the REX shared google drive
 # to desktop
 # otu table
-write.csv(ps.noncontam_soil1@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-table-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil1@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2021-table-filtered-noncontam.csv")
 # taxonomy table
-write.csv(ps.noncontam_soil1@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2023-taxonomy-filtered-noncontam.csv")
+write.csv(ps.noncontam_soil1@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/16S-2021-taxonomy-filtered-noncontam.csv")
 
 # upload these to REX google shared drive
 # update path
 # otu table
-write.csv(ps.noncontam_soil1@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-table-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil1@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2021/files to create phyloseq object/16S-2021-table-filtered-noncontam.csv"), row.names=F)
 # taxonomy table
-write.csv(ps.noncontam_soil1@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2023/files to create phyloseq object/16S-2023-taxonomy-filtered-noncontam.csv"), row.names=F)
+write.csv(ps.noncontam_soil1@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/2021/files to create phyloseq object/16S-2021-taxonomy-filtered-noncontam.csv"), row.names=F)
 ```
 
