@@ -107,7 +107,7 @@ qiime phylogeny fasttree \
   --o-tree 16S-2023-fasttree-unrooted-tree.qza
   --verbose
   
-qiime phylogeny fasttree --i-alignment 16S-2023-masked-aligned-rep-seqs.qza --o-tree 16S-2023-fasttree-tree.qza --verbose
+qiime phylogeny fasttree --i-alignment 16S-2023-masked-aligned-rep-seqs.qza --o-tree 16S-2023-fasttree-unrooted-tree.qza --verbose
 
 #root the tree using the longest root
 qiime phylogeny midpoint-root \
