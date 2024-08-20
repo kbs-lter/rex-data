@@ -17,9 +17,9 @@ dir <- Sys.getenv("DATA_DIR")
 list.files(dir)
 
 # Read in data
-soil22 <- read.csv(file.path(dir, "soil/L0/REX_Y2_Microbial soils_Soil moisture.csv"))
-predrought23 <- read.csv(file.path(dir, "soil/L0/T7_warmx_predrought_soil_moisture_2023.csv"))
-soil <- read.csv(file.path(dir, "soil/L0/REX_Microbial_Soil_GWC.csv"))
+soil22 <- read.csv(file.path(dir, "soil/L0/REX_Microbial_Soil_GWC_2022_L0.csv"))
+predrought23 <- read.csv(file.path(dir, "soil/L0/T7_warmx_predrought_Microbial_Soil_GWC_2023_L0.csv"))
+soil <- read.csv(file.path(dir, "soil/L0/Falvo_REX_Microbial_Soil_GWC.csv"))
 microbe_meta <- read.csv(file.path(dir, "REX_Microbial_sampling_IDs_complete.csv"))
 meta <- read.csv(file.path(dir, "REX_T7_metadata.csv"))
 
@@ -52,6 +52,7 @@ warmx_1 <- soil_3 %>% filter(FP_treatment %in% c("IR", "OR", "OC"))
 
 # we want to filter out fungicide, nematicide, and sorghum subplot manipulations
 warmx_2 <- warmx_1 %>% filter(!Subplot_Description %in% c("Fungicide", "Nematicide", "Sorghum"))
+# remove first two rows
 warmx_2 <- warmx_2[-c(1,2),]
 
 # upload L1 data
@@ -61,6 +62,7 @@ write.csv(warmx_2, file.path(dir,"soil/L1/T7_warmx_soil_moisture_2022_L1.csv"), 
 
 ###############################################################################
 # 2021-2023 
+# From Grant's dataframe
 
 # delete columns
 microbe_meta <- microbe_meta[,1:14]
@@ -87,7 +89,7 @@ warmx_4 <- warmx_3 %>% filter(FP_treatment %in% c("IR", "OR", "OC"))
 warmx_5 <- warmx_4 %>% filter(!Subplot_treatment %in% c("F","S","N"))
 warmx_6 <- na.omit(warmx_5)
 
-write.csv(warmx_6, file.path(dir,"soil/L1/T7_warmx_soil_moisture_L1.csv"), row.names=F) # just warmx plots
+write.csv(warmx_6, file.path(dir,"soil/L1/T7_warmx_Microbial_Soil_GWC_L1.csv"), row.names=F) # just warmx plots
 
 ###############################################################################
 # pre drought 2023
