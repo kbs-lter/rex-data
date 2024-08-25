@@ -43,7 +43,9 @@ height21[ ,c('Length_cm_of_Lower_Stem_without_leaves',
               'average_SPAD',
               'Notes',
               'data_entry_order',
-              'proofing_notes')] <- list(NULL)
+              'proofing_notes',
+             'Plant_with_Gall_yes_or_no')] <- list(NULL)
+
 height22[ ,c('harvest_date',
               'inflorescence_present',
               'stem_dryweight',
@@ -53,8 +55,8 @@ height22[ ,c('harvest_date',
               'gall_height',
               'notes',
               'distance_to_first_green_leaf')] <- list(NULL)
-meta21[ ,c('Old.ID',
-         'Flowered.',
+
+meta21[ ,c('Flowered.',
          'Notes')] <- list(NULL)
 
 meta22[ ,c('Project',
@@ -73,10 +75,11 @@ height21 <- height21 %>%
 height22 <- height22 %>%
   drop_na(plant_height)
 
-# Removing rows that don't have the plant designated as 'galled' or 'not galled'
-height21 <- height21 %>%
-  filter(!(Plant_with_Gall_yes_or_no == ""))
+#Change old ID to galling status
+meta21$Old.ID <- str_extract(meta21$Old.ID, "[aA-zZ]+")
+meta21$Old.ID <- replace_na(meta21$Old.ID,"N")
 
+# Removing rows that don't have the plant designated as 'galled' or 'not galled'
 meta22 <- meta22 %>%
   filter(!(Gall == ""))
 
@@ -90,17 +93,15 @@ height21$Year <- 2021
 height22$Year <- 2022
 
 # Renaming information in gall column
-height21$Plant_with_Gall_yes_or_no[height21$Plant_with_Gall_yes_or_no == "Y"] = 'Galled'
-height21$Plant_with_Gall_yes_or_no[height21$Plant_with_Gall_yes_or_no == "N"] = 'Non-Galled'
-height21$Plant_with_Gall_yes_or_no[height21$Plant_with_Gall_yes_or_no == "y"] = 'Galled'
-height21$Plant_with_Gall_yes_or_no[height21$Plant_with_Gall_yes_or_no == "n"] = 'Non-Galled'
+meta21$Old.ID[meta21$Old.ID == "N"] = "Non-Galled"
+meta21$Old.ID[meta21$Old.ID == "G"] = "Galled"
+
 meta22$Gall[meta22$Gall == "gall"] = 'Galled'
 meta22$Gall[meta22$Gall == "no gall"] = 'Non-Galled'
 
 # Renaming columns
 height21 <- height21 %>% 
   rename("Unique_ID" = "Unique_Plant_Number",
-         "Galling_Status" = "Plant_with_Gall_yes_or_no",
          "Height_cm" = "Total_Plant_Height_cm")
 
 height22 <- height22 %>% 
@@ -109,7 +110,8 @@ height22 <- height22 %>%
 
 meta21 <- meta21 %>% 
   rename("Climate_Treatment" = "Treatment.1",
-         "Unique_ID" = "New.ID")
+         "Unique_ID" = "New.ID",
+         "Galling_Status" = "Old.ID")
 
 meta22 <- meta22 %>%
   rename("Unique_ID" = "Unique_Plant_Number",
@@ -130,6 +132,7 @@ height21_meta <- height21_meta %>% # remove rows with NAs for height
   drop_na(Height_cm)
 
 meta21$Unique_ID <- NULL # note: unique ID between meta-data and height22 refer to different plots, so removing this here
+meta21$Galling_Status <- NULL #remove old gall status
 
 height22_meta <- left_join(meta22, height22, by = "Unique_ID") %>% #merge galling status
   left_join(., meta21, by = c("Treatment","Rep","Footprint","Subplot")) #merge climate treatment

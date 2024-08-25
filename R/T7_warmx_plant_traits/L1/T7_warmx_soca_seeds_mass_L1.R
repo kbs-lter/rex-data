@@ -25,16 +25,18 @@ mass22 <- read.csv(file.path(L0dir, "T7_warmx_Soca_infl_mass_2022_L0.csv"))
 mass22_MH <- read.csv(file.path(L0dir,"LTER_REX_2022_INFL_seed_mass_MH.csv"), header=T)
 meta21 <- read.csv(file.path(L0dir, "REX_warmx_Soca_ID_metadata_2021.csv")) # climate treatment
 meta22 <- read.csv(file.path(L0dir, "REX_2022_Individual_Goldenrod_Data.csv")) # rep, galling status
-heights21 <- read.csv(file.path(L0dir,"T7_warmx_Soca_plant_height_postdrought_2021_L0.csv")) # galling status
+height21 <- read.csv(file.path(L0dir, "T7_warmx_Soca_plant_height_postdrought_2021_L0.csv"))
+
 
 #remove header rows from mass21
 mass21 <- mass21[-c(1,2,3),]
 names(mass21) <- mass21[1,]
 mass21<- mass21[-1,]
 
-#remove rows with no data for plant height
-heights21 <- heights21 %>%
+# Removing rows w no data in the 'height' column
+height21 <- height21 %>%
   drop_na(Total_Plant_Height_cm)
+
 
 # Removing unneeded columns
 mass21[ ,c('Year_of_Harvest',
@@ -48,8 +50,7 @@ mass22[ ,c('Date_of_fruit_Dissection',
 mass22_MH[,c('field.and.proofing.notes', 
              'Weighed.and.Processed.by')] <- list(NULL)
 
-meta21[ ,c('Old.ID',
-           'Flowered.',
+meta21[ ,c('Flowered.',
            'Notes')] <- list(NULL)
 
 meta22[ ,c('Project',
@@ -61,26 +62,6 @@ meta22[ ,c('Project',
            'Gall_Height',
            'Notes')] <- list(NULL)
 
-heights21[ ,c('Length_cm_of_Lower_Stem_without_leaves',
-              'Number_of_Ancillary_Galls',
-              'Research_Plant_in_ANPP_clip_area_Y_or_N',
-              'Date_of_Fruit_Collection',
-              'Date_of_Plant_Harvest',
-              'Height_to_gall_cm',
-              'Height_to_top_of_Plant_cm',
-              'Infl_harvested_BEFORE_field_plant_yes_or_no',
-              'Infl_height_cm_if_previously_harvested',
-              'Percent_of_stem_length_senescence',
-              'Reproduction_no_infl_bud_flower_fruit',
-              'Type_of_Inflorescence',
-              'Spad_1',
-              'Spad_2',
-              'Spad_3',
-              'average_SPAD',
-              'Notes',
-              'data_entry_order',
-              'proofing_notes',
-              'Total_Plant_Height_cm')] <- list(NULL)
 
 # Removing rows w no data in the 'mass' column
 mass21 <- mass21 %>%
@@ -90,15 +71,11 @@ mass22 <- mass22 %>%
 mass22_MH <- mass22_MH %>%
   drop_na(Seeds..g.)
 
-#Removing rows that don't have the plant designated as 'galled' or 'not galled'
-heights21 <- heights21 %>%
-  filter(!(Plant_with_Gall_yes_or_no == ""))
 
+#Change old ID to galling status
+meta21$Old.ID <- str_extract(meta21$Old.ID, "[aA-zZ]+")
+meta21$Old.ID <- replace_na(meta21$Old.ID,"N")
 
-# Fixing plant ID values in 2021 data
-heights21 <- heights21 %>%
-  filter(!(Unique_Plant_Number == 286.1)) %>% # keeping 286.2 since it was recorded at a later date
-  mutate_at(1, round, 0) # rounding unique plant ID to whole integer
 
 # Fixing plant ID values in 2022 MH data
 mass22_MH <- mass22_MH %>%
@@ -124,24 +101,21 @@ mass22_MH <- mass22_MH %>%
 
 meta21 <- meta21 %>% 
   rename("Climate_Treatment" = "Treatment.1",
-         "Unique_ID" = "New.ID",)
+         "Unique_ID" = "New.ID",
+         "Galling_Status" = "Old.ID")
 
 meta22 <- meta22 %>% 
   rename("Unique_ID" = "Unique_Plant_Number",
          "Galling_Status" = "Gall",
          "Subplot" = "Quad")
 
-heights21 <- heights21 %>%
-  rename("Unique_ID" = "Unique_Plant_Number",
-         "Galling_Status" = "Plant_with_Gall_yes_or_no")
 
 #standarize gall status
 meta22$Galling_Status[meta22$Galling_Status == "gall"] = 'Galled'
 meta22$Galling_Status[meta22$Galling_Status == "no gall"] = 'Non-Galled'
-heights21$Galling_Status[heights21$Galling_Status == "Y"] = 'Galled'
-heights21$Galling_Status[heights21$Galling_Status == "N"] = 'Non-Galled'
-heights21$Galling_Status[heights21$Galling_Status == "y"] = 'Galled'
-heights21$Galling_Status[heights21$Galling_Status == "n"] = 'Non-Galled'
+meta21$Galling_Status[meta21$Galling_Status == "N"] = "Non-Galled"
+meta21$Galling_Status[meta21$Galling_Status == "G"] = "Galled"
+
 
 #combine 2022 entries
 mass22 <- rbind(mass22,mass22_MH)
@@ -151,19 +125,19 @@ class(mass21$Unique_ID) = "numeric"
 
 #remove any metadata that didn't have height value for 21
 ## assumes the plant was not harvested and therefore dead
-meta21 <- meta21[(meta21$Unique_ID %in% heights21$Unique_ID),]
+meta21 <- meta21[(meta21$Unique_ID %in% height21$Unique_Plant_Number),]
 
 # Merge data with meta-data
-mass21_meta <- left_join(meta21, mass21, by = "Unique_ID") %>%
-  left_join(., heights21, by="Unique_ID") 
+mass21_meta <- left_join(meta21, mass21, by = "Unique_ID")
 mass21_meta$Year <- 2021
 
 meta21$Unique_ID <- NULL # note: unique ID between meta-data and height_22 refer to different plots, so removing this here
+meta21$Galling_Status <- NULL #remove old gall status
+
 
 mass22_meta <- left_join(meta22, mass22, by = "Unique_ID") %>% #merge galling status
   left_join(., meta21, by = c("Treatment","Rep","Footprint","Subplot")) #merge climate treatment
 mass22_meta$Year <- 2022
-
 
 
 # Fixing NA climate treatment information (all irrigated controls)
@@ -191,4 +165,4 @@ mass <- rbind(mass21_meta,mass22_meta)
 
 # # Upload cleaned data to L1 folder
 #write.csv(mass, file.path(dir,"T7_warmx_plant_traits/L1/T7_warmx_soca_infl_mass_L1.csv"), row.names=F)
-write.csv(mass,file.path(L1dir,"T7_warmx_soca_infl_mass_L1.csv"),row.names=F)
+write.csv(mass,file.path(L1dir,"T7_warmx_soca_seeds_mass_L1.csv"),row.names=F)
