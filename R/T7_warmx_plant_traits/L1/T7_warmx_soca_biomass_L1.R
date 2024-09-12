@@ -37,12 +37,10 @@ mass22 <- mass22[!is.na(as.numeric(as.character(mass22$plant_num))),]
   
 
 #remove unneeded columns
-mass21[,c("Harvest_Date",
-          "Lower_Stem_Diameter_mm",
+mass21[,c("Lower_Stem_Diameter_mm",
           "Notes")] <- list(NULL)
 
-mass22[,c("harvest_date",
-          "inflorescence_present",
+mass22[,c("inflorescence_present",
           "plant_height",
           "gall_diameter",
           "gall_height",
@@ -74,7 +72,8 @@ mass21 <- mass21 %>%
 
 mass22 <- mass22 %>%
   rename("Unique_ID" = "plant_num",
-         "Biomass" = "stem_dryweight")
+         "Biomass" = "stem_dryweight",
+         "Harvest_Date" = "harvest_date")
 
 meta21 <- meta21 %>% 
   rename("Climate_Treatment" = "Treatment.1",
