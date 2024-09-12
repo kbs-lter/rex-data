@@ -38,14 +38,12 @@ meta22[,c('Project',
           'Gall_Height',
           'Notes')] <- list(NULL)
 
-galls21[,c('Harvest_Date',
-           'Fresh_Weigh_Date',
+galls21[,c('Fresh_Weigh_Date',
            'Dried_Weigh_Date',
            'Leaf_Color',
            'Notes')] <- list(NULL)
 
-galls22[,c('harvest_date',
-           'inflorescence_present',
+galls22[,c('inflorescence_present',
            'plant_height',
            'stem_dryweight',
            'gall_diameter',
@@ -89,7 +87,8 @@ galls21 <- galls21 %>%
 galls22 <- galls22 %>%
   rename("Unique_ID" = "plant_num",
          "Fresh_Weight" = "gall_freshweight",
-         "Dried_Weight" = "gall_dryweight")
+         "Dried_Weight" = "gall_dryweight",
+        'Harvest_Date' = 'harvest_date')
 
 ##convert unique id data to integer
 class(galls21$Unique_ID) = "numeric"
