@@ -29,7 +29,6 @@ height21[ ,c('Length_cm_of_Lower_Stem_without_leaves',
               'Number_of_Ancillary_Galls',
               'Research_Plant_in_ANPP_clip_area_Y_or_N',
               'Date_of_Fruit_Collection',
-              'Date_of_Plant_Harvest',
               'Height_to_gall_cm',
               'Height_to_top_of_Plant_cm',
               'Infl_harvested_BEFORE_field_plant_yes_or_no',
@@ -46,8 +45,7 @@ height21[ ,c('Length_cm_of_Lower_Stem_without_leaves',
               'proofing_notes',
              'Plant_with_Gall_yes_or_no')] <- list(NULL)
 
-height22[ ,c('harvest_date',
-              'inflorescence_present',
+height22[ ,c( 'inflorescence_present',
               'stem_dryweight',
               'gall_freshweight',
               'gall_dryweight',
@@ -102,11 +100,13 @@ meta22$Gall[meta22$Gall == "no gall"] = 'Non-Galled'
 # Renaming columns
 height21 <- height21 %>% 
   rename("Unique_ID" = "Unique_Plant_Number",
-         "Height_cm" = "Total_Plant_Height_cm")
+         "Height_cm" = "Total_Plant_Height_cm",
+        'Harvest_Date' = 'Date_of_Plant_Harvest')
 
 height22 <- height22 %>% 
   rename("Unique_ID" = "plant_num",
-         "Height_cm" = "plant_height")
+         "Height_cm" = "plant_height",
+        'Harvest_Date' = 'harvest_date')
 
 meta21 <- meta21 %>% 
   rename("Climate_Treatment" = "Treatment.1",
