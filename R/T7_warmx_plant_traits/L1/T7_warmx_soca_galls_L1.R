@@ -49,7 +49,8 @@ galls22[,c('inflorescence_present',
            'gall_diameter',
            'gall_height',
            'distance_to_first_green_leaf',
-           'notes')] <- list(NULL)
+           'notes',
+          'harvest_date')] <- list(NULL)
 
 # Removing nongalled plants 2022
 galls22 <- galls22 %>%
@@ -87,8 +88,7 @@ galls21 <- galls21 %>%
 galls22 <- galls22 %>%
   rename("Unique_ID" = "plant_num",
          "Fresh_Weight" = "gall_freshweight",
-         "Dried_Weight" = "gall_dryweight",
-        'Harvest_Date' = 'harvest_date')
+         "Dried_Weight" = "gall_dryweight")
 
 ##convert unique id data to integer
 class(galls21$Unique_ID) = "numeric"
