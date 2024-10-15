@@ -133,7 +133,7 @@ ecoplates <- merge(x=plates,y=hour_csv, by.x=c('Reading Date/Time'),
 
 #confirm that we have the same number of rows 
 length(rownames(day7_csv)) = 960
-length(rownames(meta_csv)) =960
+length(rownames(meta_csv)) = 960
 length(rownames(plates)) = 7680
 length(rownames(ecoplates)) = 7680
 ```
@@ -222,6 +222,27 @@ standardsamples3 <- select(standardsamples2, "Plot_ID", "Footprint_Location", "R
 
 # change column "Delta_MinusWater" name to "Absorbence"
 colnames(standardsamples3)[12] <- "Absorbence"
+
+# adding carbon group column to data
+# first make a list of all the carbon groups and the different carbon substrates that correspond to those groups
+carbon_groups <- list(
+        "amino_acids" = c("β-HydroxyGlycyl-L-Glutamic_Acid", "L-Threonine", "L-Serine", "L-Asparagine", "L-Phenylalanine", "L-Arginine"),
+        "amines" = c("Putrescine", "Phenylethylamine"),
+        "carbohydrates" = c("β-MethylD-Glucoside", "D-Xylose", "i-Erythritol", "D-Mannitol", "N-Acetyl-D-Glucosamine", "D-Cellobiose", "Glucose1-Phosphate", "α-D-Lactose", "D,L-α-Glycerol_Phosphate"),
+        "carboxylic_acids" = c("D-Malic_Acid", "α-Keto_Butyric_Acid", "Itaconic_Acid", "Pyruvic_Acid_Methyl_Ester", "γ-Amino_Butyric_Acid", "D-Galactonic_Acid_γ-Lactone", "D-Glucosaminic_Acid", "D-Galacturonic_Acid"),
+        "phenolic_acids" = c("4-Hydroxy_Benzoic_Acid", "2-Hydroxy_Benzoic_Acid"),
+        "polymers" = c("Glycogen", "Tween_40", "Tween_80", "α-Cyclodextrin")
+        )
+# Create the new column with the broader group names based on the mapping above
+standardsamples3$carbon_group <- unlist(sapply(standardsamples3$Well_C_Source, function(cs) {
+  group <- names(carbon_groups)[sapply(carbon_groups, function(x) cs %in% x)]
+  if (length(group) == 0) group <- "Unknown"
+  group
+}))
+
+# move Absorbence column to be the last column
+standardsamples3 <- standardsamples3 %>%
+  relocate(Absorbence, .after = last_col())
 
 # save this as a completed, standardized data 
 write.csv(standardsamples3, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L1/biolog_clean_L1.csv"), row.names = FALSE)
