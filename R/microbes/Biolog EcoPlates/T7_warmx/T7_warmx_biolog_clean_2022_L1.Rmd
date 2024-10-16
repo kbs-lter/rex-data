@@ -1,16 +1,17 @@
 ---
 title: "Biolog Cleaning Script"
-author: "Adrian Noecker"
-date: "September 2023"
+author: "Adrian Noecker, Moriah Young"
+date: "September 2023; updated October 2024"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
 ---
 
-COLLABORATORS: Moriah Young, Phoebe Zarnetske, Mark Hammond, Taylor Ulbrich
+COLLABORATORS: Phoebe Zarnetske, Mark Hammond
 DATA INPUT:  csv from the shared Google drive  
 DATA OUTPUT: Code and Rmd are in the scripts folder in Github  
 PROJECT: REX
+Received help from a script made by Taylor Ulbrich
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -145,9 +146,10 @@ clean_ecoplates <- ecoplates %>%
   select(-Intials, -Plate_word, -Biolog_Plate_Wells_Location)
 
 # Convert any data in the Delta column that is <0 to 0 
-clean_ecoplates$Delta[clean_ecoplates$Delta < 0]<-0
+clean_ecoplates$Delta[clean_ecoplates$Delta < 0] <- 0
 ```
 
+# Following Taylor's code
 # standardize each substrate absorance value 
 ## First, standardize by substracting the time = 0 value from every other time point for each individual well
 ```{r}
