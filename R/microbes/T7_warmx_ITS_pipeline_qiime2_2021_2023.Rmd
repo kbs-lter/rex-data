@@ -1,0 +1,162 @@
+---
+title: "REX T7 warmx ITS Sequencing"
+author: "Moriah Young"
+date: "2024-11-05"
+output: pdf_document
+---
+
+After transferring data from GLOBUS from NCSU
+```{bash}
+# extract the contents of the FastqFiles_MS1_498_MYoungPLT-123_100270653.tar
+# this command extracts the contents of the .tar and lists the files as they are being extracted
+# -x: Extract files from the .tar
+# -v: Verbose mode, which shows the progress of extraction by listing the files being extracted
+# -f: Specifies the file name of the .tar (this must come last in the options list)
+tar -xvf FastqFiles_MS1_498_MYoungPLT-123_100270653.tar
+
+# move files to the "REX_ITS_2021_2023" folder in home directory
+mv *.fastq.gz ~/REX_ITS_2021_2023/
+
+# OR can do this in one line by telling it where to put the fastq files
+tar -xvf FastqFiles_MS1_498_MYoungPLT-123_100270653.tar -C ~/REX_ITS_2021_2023
+```
+
+Making a mapping/manifest file
+```{r}
+# FIRST STEPS/NOTE: NCSU did not give me a file that listed the fastq files they sent me (MSU's RTSF does this), which is helpful when making a manifest file SO, first, I accessed the MSU HPCC through the terminal and listed all the files in the folder I made for the fastq files. I copy and pasted those files into an excel sheet and saved as csv, which is the fastq data frame I read in below.
+
+# create manifest dataframe
+manifest <- data.frame (
+        'sample-id' = character(226),
+        'forward-absolute-filepath' = rep("/mnt/home/youngmor/REX_ITS_2021_2023/", 226),
+        'reverse-absolute-filepath' = rep("/mnt/home/youngmor/REX_ITS_2021_2023/", 226),
+        stringsAsFactors = FALSE
+)
+
+# read in .csv with fastq file names
+fastq <- read.csv("/Users/moriahyoung/Desktop/REX_ITS_fastq_filenames.csv")
+
+# Process fastq_df to extract sample_id and separate R1 and R2 files
+fastq_processed <- fastq %>%
+  mutate(
+    # Extract sample_id as the characters before the first underscore
+    sample_id = str_extract(fastq, "^[^_]+"),
+    # Identify forward and reverse files
+    forward_file = ifelse(str_detect(fastq, "_R1_"), str_extract(fastq, "[^/]+$"), NA),
+    reverse_file = ifelse(str_detect(fastq, "_R2_"), str_extract(fastq, "[^/]+$"), NA)
+  ) %>%
+  # Group by sample_id so we have a single row per sample
+  group_by(sample_id) %>%
+  summarize(
+    forward_file = na.omit(forward_file)[1],
+    reverse_file = na.omit(reverse_file)[1],
+    .groups = 'drop'
+  )
+
+# Merge `manifest` with `fastq_processed` on `sample_id` to populate columns
+manifest <- manifest %>%
+  # First fill in the sample_id column based on the position in fastq_processed
+  mutate(sample_id = fastq_processed$sample_id[1:nrow(manifest)]) %>%
+  # Append R1 and R2 filenames to paths in forward and reverse columns
+  left_join(fastq_processed, by = "sample_id") %>%
+  mutate(
+    forward.absolute.filepath = ifelse(!is.na(forward_file),
+                                       paste0(forward.absolute.filepath, forward_file),
+                                       forward.absolute.filepath),
+    reverse.absolute.filepath = ifelse(!is.na(reverse_file),
+                                       paste0(reverse.absolute.filepath, reverse_file),
+                                       reverse.absolute.filepath)
+  ) %>%
+  select(sample_id, forward.absolute.filepath, reverse.absolute.filepath)
+
+# edit column names
+names(manifest)[names(manifest) == "sample_id"] <- "sample-id"
+names(manifest)[names(manifest) == "forward.absolute.filepath"] <- "forward-absolute-filepath"
+names(manifest)[names(manifest) == "reverse.absolute.filepath"] <- "reverse-absolute-filepath"
+
+write.csv(manifest, "/Users/moriahyoung/Desktop/REX_ITS_2021_2023_manifest.csv")
+```
+
+```{bash}
+#load anaconda
+module load Conda/3
+
+#activate qiime2
+conda activate qiime2-2022.11
+
+# random notes
+# Ctrl + C to stop a process running on a terminal
+#SBATCH --output=~/%x-%j.slurmout # x is job name and j is job number and the outputs will go here
+```
+
+Import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
+```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+qiime tools import 
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path REX_ITS_2021_2023_manifest.txt/ \
+--input-format PairedEndFastqManifestPhred33V2 \
+--output-path REX_ITS_2021_2023.qza \
+
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path REX_ITS_2021_2023_manifest.txt/ --input-format PairedEndFastqManifestPhred33V2 --output-path REX_ITS_2021_2023.qza
+```
+
+Evaluate data quality
+We need to examine the sequence quality to determine how we should trim the sequences. If you have run FastQC on your raw sequence files, you can examine the per base sequence quality category. Qiime also provides a plugin for graphing sequence quality. Add the input and output names to the following commands and run:
+```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+qiime demux summarize \
+--i-data REX_ITS_2021_2023.qza \
+--o-visualization REX_ITS_2021_2023_SUMMARY_VIZ.qzv
+qiime tools view REX_ITS_2021_2023_SUMMARY_VIZ.qzv
+
+qiime demux summarize --i-data REX_ITS_2021_2023.qza --o-visualization REX_ITS_2021_2023_SUMMARY_VIZ.qzv
+```
+
+Denoise sequences using dada2
+```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza \
+--p-trim-left-f 0 \
+--p-trim-left-r 0 \
+--p-trunc-len-f 250 \ # this number will change based on the quality of your sequences
+--p-trunc-len-r 250 \ # this number will change based on the quality of your sequences
+--o-table REX_ITS_2021_2023-dada2table.qza \
+--o-representative-sequences REX_ITS_2021_2023-rep-seqs.qza \
+--o-denoising-stats REX_ITS_2021_2023-denoising-stats.qza \
+--p-n-threads 36
+
+#job below on hpcc took 03:55:40
+#!/bin/bash --login
+########## SBATCH Lines for Resource Request ##########
+ 
+#SBATCH --time=24:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=16
+#SBATCH --mem-per-cpu=64G            # memory required per allocated CPU (or core) - amount of memory (in bytes)
+#SBATCH --job-name qiime_denoising5      # you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=youngmor@msu.edu 
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 250 --p-trunc-len-r 250 --o-table REX_ITS_2021_2023-dada2table.qza --o-representative-sequences REX_ITS_2021_2023-rep-seqs.qza --o-denoising-stats REX_ITS_2021_2023-denoising-stats.qza --p-n-threads 36 --verbose
+
+# save these files!
+```
+
+Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
+You can then drag and drop the .qzv file into this website: https://view.qiime2.org/ 
+You'll need to download it from the interactive interface onto your mac
+```{bash}
+# Run 1
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+qiime metadata tabulate \
+  --m-input-file REX_ITS_2021_2023-denoising-stats.qza \
+  --o-visualization REX_ITS_2021_2023-denoising-stats.qzv
+  
+qiime metadata tabulate --m-input-file REX_ITS_2021_2023-denoising-stats.qza --o-visualization REX_ITS_2021_2023-denoising-stats.qzv
+```
+
+# Training a classifier
+```{bash}
+
+```
+
