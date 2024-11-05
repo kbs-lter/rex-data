@@ -23,6 +23,7 @@ tar -xvf FastqFiles_MS1_498_MYoungPLT-123_100270653.tar -C ~/REX_ITS_2021_2023
 
 Making a mapping/manifest file
 ```{r}
+library(tidyverse)
 # FIRST STEPS/NOTE: NCSU did not give me a file that listed the fastq files they sent me (MSU's RTSF does this), which is helpful when making a manifest file SO, first, I accessed the MSU HPCC through the terminal and listed all the files in the folder I made for the fastq files. I copy and pasted those files into an excel sheet and saved as csv, which is the fastq data frame I read in below.
 
 # create manifest dataframe
@@ -34,7 +35,7 @@ manifest <- data.frame (
 )
 
 # read in .csv with fastq file names
-fastq <- read.csv("/Users/moriahyoung/Desktop/REX_ITS_fastq_filenames.csv")
+fastq <- read.csv("/Users/moriahyoung/Desktop/Files to create REX ITS manifest file/REX_ITS_fastq_filenames.csv")
 
 # Process fastq_df to extract sample_id and separate R1 and R2 files
 fastq_processed <- fastq %>%
@@ -74,7 +75,12 @@ names(manifest)[names(manifest) == "sample_id"] <- "sample-id"
 names(manifest)[names(manifest) == "forward.absolute.filepath"] <- "forward-absolute-filepath"
 names(manifest)[names(manifest) == "reverse.absolute.filepath"] <- "reverse-absolute-filepath"
 
-write.csv(manifest, "/Users/moriahyoung/Desktop/REX_ITS_2021_2023_manifest.csv")
+# delete line #64
+manifest <- manifest[-64,]
+
+# Write the data frame to a .txt file
+# this file needs to be uploaded to the folder that has your sequences in on the HPCC so that it can we used further down in the pipeline with qiime2
+write.table(manifest, "/Users/moriahyoung/Desktop/Files to create REX ITS manifest file/REX_ITS_2021_2023_manifest.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 ```
 
 ```{bash}
@@ -94,11 +100,11 @@ Import demultiplexed sequences into .qza artifact for downstream pipeline using 
 cd /mnt/home/youngmor/REX_ITS_2021_2023
 qiime tools import 
 --type 'SampleData[PairedEndSequencesWithQuality]' \
---input-path REX_ITS_2021_2023_manifest.txt/ \
+--input-path REX_ITS_2021_2023_manifest.txt \
 --input-format PairedEndFastqManifestPhred33V2 \
 --output-path REX_ITS_2021_2023.qza \
 
-qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path REX_ITS_2021_2023_manifest.txt/ --input-format PairedEndFastqManifestPhred33V2 --output-path REX_ITS_2021_2023.qza
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path REX_ITS_2021_2023_manifest.txt --input-format PairedEndFastqManifestPhred33V2 --output-path REX_ITS_2021_2023.qza
 ```
 
 Evaluate data quality
@@ -114,6 +120,7 @@ qiime demux summarize --i-data REX_ITS_2021_2023.qza --o-visualization REX_ITS_2
 ```
 
 Denoise sequences using dada2
+The qiime dada2 denoise-paired command runs the DADA2 pipeline on paired-end sequence data in QIIME 2. DADA2 is a popular method for quality filtering, trimming, merging, and denoising high-throughput sequencing reads.
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
 qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza \
@@ -138,8 +145,6 @@ qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza \
 #SBATCH --mail-user=youngmor@msu.edu 
 
 qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 250 --p-trunc-len-r 250 --o-table REX_ITS_2021_2023-dada2table.qza --o-representative-sequences REX_ITS_2021_2023-rep-seqs.qza --o-denoising-stats REX_ITS_2021_2023-denoising-stats.qza --p-n-threads 36 --verbose
-
-# save these files!
 ```
 
 Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
@@ -155,8 +160,14 @@ qiime metadata tabulate \
 qiime metadata tabulate --m-input-file REX_ITS_2021_2023-denoising-stats.qza --o-visualization REX_ITS_2021_2023-denoising-stats.qzv
 ```
 
-# Training a classifier
+# Test the classifier
+# below I'm using a pre-trained classifier from: https://github.com/colinbrislawn/unite-train/releases but I can also train my own classifier which I might want to do
 ```{bash}
+qiime feature-classifier classify-sklearn \
+--i-classifier unite-ver8-99-classifier-04.02.2020.qza \
+--i-reads REX_ITS_2021_2023-rep-seqs.qza \
+--o-classification REX_ITS_2021_2023taxonomy.qza
 
+qiime feature-classifier classify-sklearn --i-classifier unite-ver8-99-classifier-04.02.2020.qza --i-reads REX_ITS_2021_2023-rep-seqs.qza --o-classification REX_ITS_2021_2023taxonomy.qza
 ```
 
