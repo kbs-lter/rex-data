@@ -1,7 +1,7 @@
 ---
 title: "2023 16S Pipeline"
 author: "Moriah Young"
-date: "2024-04-29"
+date: "2024-11-05"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -37,7 +37,8 @@ qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-pa
 
 ````
 
-Denoise sequences using dada2
+Evaluate data quality
+We need to examine the sequence quality to determine how we should trim the sequences. If you have run FastQC on your raw sequence files, you can examine the per base sequence quality category. Qiime also provides a plugin for graphing sequence quality. Add the input and output names to the following commands and run:
 ```{bash}
 qiime demux summarize \
 --i-data 20240415_16SV4_PE250.qza \
@@ -45,6 +46,35 @@ qiime demux summarize \
 qiime tools view 20240415_16SV4_PE250_PE250_SUMMARY_VIZ.qzv # https://view.qiime2.org/
 
 qiime demux summarize --i-data 20240415_16SV4_PE250.qza --o-visualization 20240415_16SV4_PE250_PE250_SUMMARY_VIZ.qzv
+```
+
+Denoise sequences using dada2
+```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+qiime dada2 denoise-paired --i-demultiplexed-seqs 20240415_16SV4_PE250.qza \
+--p-trim-left-f 0 \
+--p-trim-left-r 0 \
+--p-trunc-len-f 250 \ # this number will change based on the quality of your sequences
+--p-trunc-len-r 250 \ # this number will change based on the quality of your sequences
+--o-table REX_ITS_2021_2023-dada2table.qza \
+--o-representative-sequences 20240415_16SV4_PE250-rep-seqs.qza \
+--o-denoising-stats 20240415_16SV4_PE2503-denoising-stats.qza \
+--p-n-threads 36
+
+#job below on hpcc took 03:55:40
+#!/bin/bash --login
+########## SBATCH Lines for Resource Request ##########
+ 
+#SBATCH --time=24:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=16
+#SBATCH --mem-per-cpu=64G            # memory required per allocated CPU (or core) - amount of memory (in bytes)
+#SBATCH --job-name qiime_denoising5      # you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=youngmor@msu.edu 
+
+qiime dada2 denoise-paired --i-demultiplexed-seqs 20240415_16SV4_PE250.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 250 --p-trunc-len-r 250 --o-table 20240415_16SV4_PE250-dada2table.qza --o-representative-sequences 20240415_16SV4_PE250-rep-seqs.qza --o-denoising-stats 20240415_16SV4_PE250-denoising-stats.qza --p-n-threads 36 --verbose
+
+# save these files!
 ```
 
 Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
