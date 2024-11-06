@@ -163,11 +163,216 @@ qiime metadata tabulate --m-input-file REX_ITS_2021_2023-denoising-stats.qza --o
 # Test the classifier
 # below I'm using a pre-trained classifier from: https://github.com/colinbrislawn/unite-train/releases but I can also train my own classifier which I might want to do
 ```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
 qiime feature-classifier classify-sklearn \
 --i-classifier unite_ver9_dynamic_29.11.2022-Q2-2022.11.qza \
 --i-reads REX_ITS_2021_2023-rep-seqs.qza \
 --o-classification REX_ITS_2021_2023-taxonomy.qza
 
 qiime feature-classifier classify-sklearn --i-classifier unite_ver9_dynamic_29.11.2022-Q2-2022.11.qza --i-reads REX_ITS_2021_2023-rep-seqs.qza --o-classification REX_ITS_2021_2023-taxonomy.qza
+
+# visualize
+qiime metadata tabulate \
+  --m-input-file REX_ITS_2021_2023-taxonomy.qza \
+  --o-visualization REX_ITS_2021_2023-taxonomy.qzv
+
+# testing the classifier and creating the .qzv file took 7 hours on the hpcc (using the same SLURM code/settings as the denoising script above)
+  
+qiime metadata tabulate --m-input-file REX_ITS_2021_2023-taxonomy.qza --o-visualization REX_ITS_2021_2023-taxonomy.qzv
+```
+
+# Generate a phylogenetic tree
+https://docs.qiime2.org/2023.2/tutorials/phylogeny/#root-the-phylogeny
+```{bash}
+cd /mnt/home/youngmor/REX_ITS_2021_2023
+
+# this aligns your sequences
+qiime alignment mafft \
+  --i-sequences REX_ITS_2021_2023-rep-seqs.qza \
+  --o-alignment REX_ITS_2021_2023-aligned-rep-seqs.qza
+  
+qiime alignment mafft REX_ITS_2021_2023-rep-seqs.qza --o-alignment REX_ITS_2021_2023-aligned-rep-seqs.qza
+  
+qiime alignment mask \
+  --i-alignment REX_ITS_2021_2023-aligned-rep-seqs.qz \
+  --o-masked-alignment REX_ITS_2021_2023-masked-aligned-rep-seqs.qza
+  
+qiime alignment mask --i-alignment REX_ITS_2021_2023-aligned-rep-seqs.qza --o-masked-alignment REX_ITS_2021_2023-masked-aligned-rep-seqs.qza
+
+# make the tree
+# using fasttree
+qiime phylogeny fasttree \
+  --i-alignment REX_ITS_2021_2023-masked-aligned-rep-seqs.qza \
+  --o-tree REX_ITS_2021_2023-fasttree-unrooted-tree.qza
+  --verbose
+  
+qiime phylogeny fasttree --i-alignment REX_ITS_2021_2023-masked-aligned-rep-seqs.qza --o-tree REX_ITS_2021_2023-fasttree-unrooted-tree.qza --verbose
+
+#root the tree using the longest root
+qiime phylogeny midpoint-root \
+  --i-tree REX_ITS_2021_2023-fasttree-unrooted-tree.qza \
+  --o-rooted-tree REX_ITS_2021_2023-fasttree-rooted-tree.qza
+
+qiime phylogeny midpoint-root --i-tree REX_ITS_2021_2023-fasttree-unrooted-tree.qza --o-rooted-tree REX_ITS_2021_2023-fasttree-rooted-tree.qza
+```
+
+# create mapping/metadata file
+```{r}
+# Clear all existing data
+rm(list=ls())
+
+# Set working directory from .Renviron
+dir <- Sys.getenv("DATA_DIR")
+list.files(dir)
+
+library(tidyverse)
+
+# read in data
+microbe_metadata_2021 <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/MY_REX_soil_microbes_2021_metadata.csv"))
+microbe_metadata_2023 <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/MY_REX_soil_microbes_2023_metadata.csv"))
+warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/REX_warmx_metadata.csv"))
+
+# add year column to microbe metadata dataframes
+microbe_metadata_2021$Year <- 2021
+microbe_metadata_2023$Year <- 2023
+
+# merge files above
+its_metadata <- full_join(microbe_metadata_2021, microbe_metadata_2023)
+
+its_metadata_1 <- full_join(its_metadata, warmx_metadata, by = c("Unique_ID", "Treatment", "Replicate",
+                                      "Footprint", "Footprint_Location", "Subplot", "Subplot_Location"))
+
+# delete columns
+# Unique_Field_Location_Code
+its_metadata_1 <- subset(its_metadata_1, select = -c(Unique_Field_Location_Code))
+
+# reorder columns
+its_metadata_1 <- its_metadata_1[, c("Year", "SampleID", "Treatment", "Replicate", "Rep", "Footprint", "Footprint_Location", "Rep_Footprint", "Footprint_Treatment_full","Subplot", "Subplot_Location", "Drought", "Warming", "Insecticide", "Subplot_Descriptions", "Unique_ID", "sampling_period")]
+
+# Replace underscores with dashes in the SampleID column
+its_metadata_1$SampleID <- gsub("_", "-", its_metadata_1$SampleID)
+
+# write a new csv with the cleaned and merge data 
+write.csv(its_metadata_1, file = "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023_metadata.csv", row.names = F)
+```
+
+Cleaning and steps to make a phyloseq object
+```{r}
+library(qiime2R)
+# Read QZA files into dataframe, re-format taxonomic tables, and re-upload them as .csv files
+# Code below you only need to do once
+# download the qza files from the HPCC
+SVsITS <- read_qza("/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.qza")
+SVsITStable <- SVsITS$data
+write.csv(SVsITStable, file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.csv")
+
+taxonomyITS <- read_qza("/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.qza")
+taxITS <- taxonomyITS$data %>% as_tibble() %>%
+  mutate(Taxon=gsub("[a-z]__", "", Taxon)) %>% 
+  separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))%>%
+  mutate(Phylum=replace_na(Phylum,"empty"))
+write.csv(taxITS, file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.csv", row.names =F)
+```
+
+Filter data
+```{r}
+library(phyloseq)
+library(microbiome)
+
+# create phyloseq object
+data_its_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.csv",
+                                         taxonomy.file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.csv",
+                                         metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023_metadata.csv")
+summarize_phyloseq(data_its_unfiltered)
+
+# filter out non bacteria
+data_its_uf1 <- subset_taxa(data_its_unfiltered, Kingdom == "Fungi")
+data_its_uf2 <- subset_taxa(data_its_uf1, Kingdom != "Bacteria" | Kingdom != "Archaea")
+data_its_uf3 <- subset_taxa(data_its_uf2, Order != "Chloroplast")
+data_its_uf4 <- subset_taxa(data_its_uf3, Family != "Mitochondria")
+
+summarize_phyloseq(data_its_uf4)
+
+# Remove samples with extremely low read depth 
+# data_16S_uf5 <- prune_samples(sample_sums(data_16S_uf4)>=1000, data_16S_uf4)
+
+# Export filtered data to desktop AND REX google shared drive
+# upload to desktop
+# otu table
+write.csv(data_its_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/REX_ITS_2021_2023-table-filtered.csv")
+# taxonomy table
+write.csv(data_its_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/REX_ITS_2021_2023-taxonomy-filtered.csv")
+
+# upload these to REX google shared drive
+# otu table
+write.csv(data_its_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/REX_ITS_2021_2023-table-filtered.csv"), row.names=F)
+# taxonomy table
+write.csv(data_its_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/REX_ITS_2021_2023-taxonomy-filtered.csv"), row.names=F)
+```
+
+Removing contaminants
+```{r}
+# https://benjjneb.github.io/decontam/vignettes/decontam_intro.html
+library(devtools)
+library(processx)
+#devtools::install_github("benjjneb/decontam", force = TRUE)
+# Install decontam package which will be used to remove potential contaminants 
+# by checking abundance distributions in negative controls vs regular samples
+library(decontam) 
+```
+
+```{r}
+# help from https://github.com/longleyr/Management-of-Soybean-Code-and-Files/blob/master/fungi_analysis_script.R
+
+# rename phyloseq object name from above
+phyloseq_soil <- data_its_uf4
+
+# check library size distribution
+#write.csv(sample_data(phyloseq_soil), file = "sample_check1_soil.csv") # probably can delete
+df_soil <- as.data.frame(sample_data(phyloseq_soil)) # Put sample_data into a ggplot-friendly data.frame
+df_soil$LibrarySize_soil <- sample_sums(phyloseq_soil)
+df_soil <- df_soil[order(df_soil$LibrarySize_soil),]
+df_soil$Index <- seq(nrow(df_soil))
+#write.csv(df_soil, file = "rank_sums_soil.csv") # probably can delete
+ggplot(data=df_soil, aes(x=Index, y=LibrarySize_soil, color=Sample_or_Control)) + geom_point()
+
+# filter by prevalence 
+sample_data(phyloseq_soil)$is.neg <- sample_data(phyloseq_soil)$Sample_or_Control == "Control Sample"
+
+contamdf.prev_soil <- isContaminant(phyloseq_soil, method="prevalence", neg="is.neg")
+table(contamdf.prev_soil$contaminant)
+
+# Make phyloseq object of presence-absence in negative controls and true samples
+ps.pa_soil <- transform_sample_counts(phyloseq_soil, function(abund) 1*(abund>0))
+ps.pa.neg_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "Control Sample", ps.pa_soil)
+ps.pa.pos_soil <- prune_samples(sample_data(ps.pa_soil)$Sample_or_Control == "True Sample", ps.pa_soil)
+
+# Make data.frame of prevalence in positive and negative samples
+df.pa_soil <- data.frame(pa.pos_soil=taxa_sums(ps.pa.pos_soil), pa.neg_soil=taxa_sums(ps.pa.neg_soil),
+                          contaminant=contamdf.prev_soil$contaminant)
+ggplot(data=df.pa_soil, aes(x=pa.neg_soil, y=pa.pos_soil, color=contaminant)) + geom_point() +
+  xlab("Prevalence (Negative Controls)") + ylab("Prevalence (True Samples)")
+
+# remove contaminants
+ps.noncontam_soil <- prune_taxa(!contamdf.prev_soil$contaminant, phyloseq_soil)
+# with contaminants removed
+otu_table(ps.noncontam_soil)
+
+# remove controls
+ps.noncontam_soil1 = subset_samples(ps.noncontam_soil, Sample_or_Control == "True Sample")
+
+# Export the now filtered & non contaminated data to desktop AND the REX shared google drive
+# to desktop
+# otu table
+write.csv(ps.noncontam_soil1@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/its-table-filtered-noncontam.csv")
+# taxonomy table
+write.csv(ps.noncontam_soil1@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/its-taxonomy-filtered-noncontam.csv")
+
+# upload these to REX google shared drive
+# update path
+# otu table
+write.csv(ps.noncontam_soil1@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/its-table-filtered-noncontam.csv"), row.names=F)
+# taxonomy table
+write.csv(ps.noncontam_soil1@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/its-taxonomy-filtered-noncontam.csv"), row.names=F)
 ```
 
