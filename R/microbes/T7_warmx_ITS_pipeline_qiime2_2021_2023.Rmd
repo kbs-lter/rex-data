@@ -164,10 +164,10 @@ qiime metadata tabulate --m-input-file REX_ITS_2021_2023-denoising-stats.qza --o
 # below I'm using a pre-trained classifier from: https://github.com/colinbrislawn/unite-train/releases but I can also train my own classifier which I might want to do
 ```{bash}
 qiime feature-classifier classify-sklearn \
---i-classifier unite-ver8-99-classifier-04.02.2020.qza \
+--i-classifier unite_ver9_dynamic_29.11.2022-Q2-2022.11.qza \
 --i-reads REX_ITS_2021_2023-rep-seqs.qza \
---o-classification REX_ITS_2021_2023taxonomy.qza
+--o-classification REX_ITS_2021_2023-taxonomy.qza
 
-qiime feature-classifier classify-sklearn --i-classifier unite-ver8-99-classifier-04.02.2020.qza --i-reads REX_ITS_2021_2023-rep-seqs.qza --o-classification REX_ITS_2021_2023taxonomy.qza
+qiime feature-classifier classify-sklearn --i-classifier unite_ver9_dynamic_29.11.2022-Q2-2022.11.qza --i-reads REX_ITS_2021_2023-rep-seqs.qza --o-classification REX_ITS_2021_2023-taxonomy.qza
 ```
 
