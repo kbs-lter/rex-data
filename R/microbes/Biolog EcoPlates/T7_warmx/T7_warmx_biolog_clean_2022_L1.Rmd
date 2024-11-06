@@ -43,52 +43,52 @@ meta_warmx <- read.csv(file.path(dir, "/REX_warmx_metadata.csv"))
 meta_warmx1 <- meta_warmx %>% dplyr::select(Subplot_Descriptions, Unique_ID, Rep, Footprint_Location)
 
 #time 0
-time0 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/time0/")
+time0 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/time0/")
 time0 = list.files(path=time0, pattern="*.csv", full.names=TRUE)
 time0_csv = ldply(time0, read_csv)
 
 #day 1
-day1 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day1/")
+day1 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day1/")
 day1 = list.files(path=day1, pattern="*.csv", full.names=TRUE)
 day1_csv = ldply(day1, read_csv)
 
 #day 2
-day2 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day2/")
+day2 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day2/")
 day2 = list.files(path=day2, pattern="*.csv", full.names=TRUE)
 day2_csv = ldply(day2, read_csv)
 
 #day 3
-day3 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day3/")
+day3 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day3/")
 day3 = list.files(path=day3, pattern="*.csv", full.names=TRUE)
 day3_csv = ldply(day3, read_csv)
 
 #day 4
-day4 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day4/")
+day4 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day4/")
 day4 = list.files(path=day4, pattern="*.csv", full.names=TRUE)
 day4_csv = ldply(day4, read_csv)
 
 #day 5
-day5 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day5/")
+day5 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day5/")
 day5 = list.files(path=day5, pattern="*.csv", full.names=TRUE)
 day5_csv = ldply(day5, read_csv)
 
 #day 6
-day6 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day6/")
+day6 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day6/")
 day6 = list.files(path=day6, pattern="*.csv", full.names=TRUE)
 day6_csv = ldply(day6, read_csv)
 
 #day 7
-day7 = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/day7/")
+day7 = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/day7/")
 day7 = list.files(path=day7, pattern="*.csv", full.names=TRUE)
 day7_csv = ldply(day7, read_csv)
 
 #meta data
-meta = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/")
+meta = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/")
 meta = list.files(path=meta, pattern="*.csv", full.names=TRUE)
 meta_csv = ldply(meta, read_csv)
 
 #meta data
-hour = file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L0/")
+hour = file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L0/")
 hour = list.files(path=hour, pattern="*.csv", full.names=TRUE)
 hour_csv = ldply(hour, read_csv)
 ```
@@ -191,13 +191,18 @@ biolog1$Delta_MinusWater<- biolog1$Delta - biolog1$Delta_Water
 
 # Again, Convert any data in the Delta_Blank column that is <0 to 0 
 biolog1$Delta_MinusWater[biolog1$Delta_MinusWater < 0] <- 0
+
+#Adding new column for negligable results (less than 0.06)
+biolog1$Delta_new<- biolog1$Delta - biolog1$Delta_Water
+biolog1$Delta_new[biolog1$Delta_new < 0.06] <- 0
+
 ```
 
 # Reformat dataframe into and abundance matrix and metadata for diversity assessments
 ```{r}
 # standard format data frame
 # first remove the unnecessary columns 
-biolog2 = select(biolog1, Delta_MinusWater, Delta, Delta_SubHr0, Well_C_Source, Hour, Plot_ID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
+biolog2 = select(biolog1, Delta_MinusWater, Delta, Delta_SubHr0, Delta_new, Well_C_Source, Hour, Plot_ID, Sample_ID, Plate, Well, Biolog_column_ID) # remove all other columns 
 
 #removing water from standard biolog
 standardnowater <- biolog2 %>% filter(!Well_C_Source %in% c("Water"))
@@ -220,7 +225,7 @@ standardsamples2 <- standardsamples1[,-c(3, 4)]
 
 # reorganize columns
 standardsamples3 <- select(standardsamples2, "Plot_ID", "Footprint_Location", "Rep", "Subplot_Descriptions",
-                           "Biolog_column_ID", "SampleID_Hour", "Plate", "Hour", "Sample_ID", "Well", "Well_C_Source", "Delta_MinusWater")
+                           "Biolog_column_ID", "SampleID_Hour", "Plate", "Hour", "Sample_ID", "Well", "Well_C_Source", "Delta_MinusWater", "Delta_new")
 
 # change column "Delta_MinusWater" name to "Absorbence"
 colnames(standardsamples3)[12] <- "Absorbence"
@@ -247,7 +252,7 @@ standardsamples3 <- standardsamples3 %>%
   relocate(Absorbence, .after = last_col())
 
 # save this as a completed, standardized data 
-write.csv(standardsamples3, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warmx/L1/biolog_clean_L1.csv"), row.names = FALSE)
+write.csv(standardsamples3, file.path(dir, "/microbes/Biolog EcoPlates/T7_warmx/L1/biolog_clean_updated_L1.csv"), row.names = FALSE)
 
 standard_wider <- pivot_wider(standardsamples3, names_from = Well_C_Source, values_from = Absorbence)
 
@@ -350,4 +355,14 @@ write.csv(biologsamples2, file.path(dir, "/microbes/Biolog EcoPlates (1)/T7_warm
 
 ```
 
+##Checking to see if major differences between approaches to rounding absorbances to 0
+```{r}
+# histogram plots of absorbences using data frame standardsamples3
+ggplot(standardsamples3, aes(x=Absorbence)) + 
+  geom_histogram()
+
+#histogram of new
+ggplot(standardsamples3, aes(x=Delta_new)) + 
+  geom_histogram()
+```
 
