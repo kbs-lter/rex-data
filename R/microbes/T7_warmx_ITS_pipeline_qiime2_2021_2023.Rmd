@@ -1,11 +1,13 @@
 ---
 title: "REX T7 warmx ITS Sequencing"
 author: "Moriah Young"
-date: "2024-11-05"
+date: "2024-11-11"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
-After transferring data from GLOBUS from NCSU
+# after transferring data from GLOBUS from NCSU
 ```{bash}
 # extract the contents of the FastqFiles_MS1_498_MYoungPLT-123_100270653.tar
 # this command extracts the contents of the .tar and lists the files as they are being extracted
@@ -21,7 +23,7 @@ mv *.fastq.gz ~/REX_ITS_2021_2023/
 tar -xvf FastqFiles_MS1_498_MYoungPLT-123_100270653.tar -C ~/REX_ITS_2021_2023
 ```
 
-Making a mapping/manifest file
+# making a manifest file
 ```{r}
 library(tidyverse)
 # FIRST STEPS/NOTE: NCSU did not give me a file that listed the fastq files they sent me (MSU's RTSF does this), which is helpful when making a manifest file SO, first, I accessed the MSU HPCC through the terminal and listed all the files in the folder I made for the fastq files. I copy and pasted those files into an excel sheet and saved as csv, which is the fastq data frame I read in below.
@@ -95,7 +97,7 @@ conda activate qiime2-2022.11
 #SBATCH --output=~/%x-%j.slurmout # x is job name and j is job number and the outputs will go here
 ```
 
-Import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
+# import demultiplexed sequences into .qza artifact for downstream pipeline using Qiime2
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
 qiime tools import 
@@ -107,7 +109,7 @@ qiime tools import
 qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' --input-path REX_ITS_2021_2023_manifest.txt --input-format PairedEndFastqManifestPhred33V2 --output-path REX_ITS_2021_2023.qza
 ```
 
-Evaluate data quality
+# evaluate data quality
 We need to examine the sequence quality to determine how we should trim the sequences. If you have run FastQC on your raw sequence files, you can examine the per base sequence quality category. Qiime also provides a plugin for graphing sequence quality. Add the input and output names to the following commands and run:
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
@@ -119,7 +121,7 @@ qiime tools view REX_ITS_2021_2023_SUMMARY_VIZ.qzv
 qiime demux summarize --i-data REX_ITS_2021_2023.qza --o-visualization REX_ITS_2021_2023_SUMMARY_VIZ.qzv
 ```
 
-Denoise sequences using dada2
+# denoise sequences using dada2
 The qiime dada2 denoise-paired command runs the DADA2 pipeline on paired-end sequence data in QIIME 2. DADA2 is a popular method for quality filtering, trimming, merging, and denoising high-throughput sequencing reads.
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
@@ -147,7 +149,7 @@ qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza \
 qiime dada2 denoise-paired --i-demultiplexed-seqs REX_ITS_2021_2023.qza --p-trim-left-f 0 --p-trim-left-r 0 --p-trunc-len-f 250 --p-trunc-len-r 250 --o-table REX_ITS_2021_2023-dada2table.qza --o-representative-sequences REX_ITS_2021_2023-rep-seqs.qza --o-denoising-stats REX_ITS_2021_2023-denoising-stats.qza --p-n-threads 36 --verbose
 ```
 
-Create a .qzv file so you can check out the table from the denoising stats that was created from the job above
+# create a .qzv file so you can check out the table from the denoising stats that was created from the job above
 You can then drag and drop the .qzv file into this website: https://view.qiime2.org/ 
 You'll need to download it from the interactive interface onto your mac
 ```{bash}
@@ -160,8 +162,8 @@ qiime metadata tabulate \
 qiime metadata tabulate --m-input-file REX_ITS_2021_2023-denoising-stats.qza --o-visualization REX_ITS_2021_2023-denoising-stats.qzv
 ```
 
-# Test the classifier
-# below I'm using a pre-trained classifier from: https://github.com/colinbrislawn/unite-train/releases but I can also train my own classifier which I might want to do
+# test the classifier
+below I'm using a pre-trained classifier from: https://github.com/colinbrislawn/unite-train/releases but I can also train my own classifier which I might want to do
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
 qiime feature-classifier classify-sklearn \
@@ -181,7 +183,7 @@ qiime metadata tabulate \
 qiime metadata tabulate --m-input-file REX_ITS_2021_2023-taxonomy.qza --o-visualization REX_ITS_2021_2023-taxonomy.qzv
 ```
 
-# Generate a phylogenetic tree
+# generate a phylogenetic tree
 https://docs.qiime2.org/2023.2/tutorials/phylogeny/#root-the-phylogeny
 ```{bash}
 cd /mnt/home/youngmor/REX_ITS_2021_2023
@@ -231,7 +233,20 @@ library(tidyverse)
 microbe_metadata_2021 <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/MY_REX_soil_microbes_2021_metadata.csv"))
 microbe_metadata_2023 <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/MY_REX_soil_microbes_2023_metadata.csv"))
 warmx_metadata <- read.csv(file.path(dir, "microbes/16S & ITS/T7_warmx/L0/ITS/files to create REX ITS metadata/REX_warmx_metadata.csv"))
+# also read in the manifest file that contains all sample IDs of not only the experimental samples, but the DNA plate controls as well. This will come into play with the decontam package
+manifest <- read.csv("/Users/moriahyoung/Desktop/Files to create REX ITS manifest file/REX_ITS_2021_2023_manifest.csv")
 
+# first work on the manifest file
+names(manifest)[names(manifest) == "sample.id"] <- "SampleID" #change column name to match the other dataframes
+manifest <- manifest[-64,] # get rid of this row
+
+# create new column "Sample_or_Control"
+manifest1 <- manifest %>%
+        mutate(Sample_or_Control = ifelse(grepl("Control|Undetermined", SampleID, ignore.case = TRUE), "Control Sample", "True Sample"))
+
+manifest1 <- manifest1[,-c(1,3,4)]
+
+# shift to microbe metadata for now
 # add year column to microbe metadata dataframes
 microbe_metadata_2021$Year <- 2021
 microbe_metadata_2023$Year <- 2023
@@ -247,16 +262,24 @@ its_metadata_1 <- full_join(its_metadata, warmx_metadata, by = c("Unique_ID", "T
 its_metadata_1 <- subset(its_metadata_1, select = -c(Unique_Field_Location_Code))
 
 # reorder columns
-its_metadata_1 <- its_metadata_1[, c("Year", "SampleID", "Treatment", "Replicate", "Rep", "Footprint", "Footprint_Location", "Rep_Footprint", "Footprint_Treatment_full","Subplot", "Subplot_Location", "Drought", "Warming", "Insecticide", "Subplot_Descriptions", "Unique_ID", "sampling_period")]
+its_metadata_1 <- its_metadata_1[, c("SampleID", "Year", "Treatment", "Replicate", "Rep", "Footprint", "Footprint_Location", "Rep_Footprint", "Footprint_Treatment_full","Subplot", "Subplot_Location", "Drought", "Warming", "Insecticide", "Subplot_Descriptions", "Unique_ID", "sampling_period")]
 
 # Replace underscores with dashes in the SampleID column
 its_metadata_1$SampleID <- gsub("_", "-", its_metadata_1$SampleID)
 
+# merge manifest file that has the "Sample_or_Control" column with the its_metadata_1 dataframe
+its_metadata_2 <- full_join(its_metadata_1, manifest1, by = "SampleID")
+
+# below can probably be deleted once the entire data set is available
+its_metadata_3 <- its_metadata_2 %>%
+        filter(!is.na(Sample_or_Control))
+
 # write a new csv with the cleaned and merge data 
-write.csv(its_metadata_1, file = "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023_metadata.csv", row.names = F)
+write.csv(its_metadata_3, file = "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023_metadata.csv", row.names = F)
 ```
 
-Cleaning and steps to make a phyloseq object
+First steps to make a phyloseq object
+# qza file --> csv file
 ```{r}
 library(qiime2R)
 # Read QZA files into dataframe, re-format taxonomic tables, and re-upload them as .csv files
@@ -264,25 +287,26 @@ library(qiime2R)
 # download the qza files from the HPCC
 SVsITS <- read_qza("/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.qza")
 SVsITStable <- SVsITS$data
-write.csv(SVsITStable, file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.csv")
+write.csv(SVsITStable, file = "/Users/moriahyoung/Downloads/ITS_2021_2023-dada2table.csv")
 
 taxonomyITS <- read_qza("/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.qza")
 taxITS <- taxonomyITS$data %>% as_tibble() %>%
   mutate(Taxon=gsub("[a-z]__", "", Taxon)) %>% 
   separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))%>%
   mutate(Phylum=replace_na(Phylum,"empty"))
-write.csv(taxITS, file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.csv", row.names =F)
+write.csv(taxITS, file = "/Users/moriahyoung/Downloads/ITS_2021_2023-taxonomy.csv", row.names =F)
 ```
 
-Filter data
+# filter data
 ```{r}
 library(phyloseq)
 library(microbiome)
 
 # create phyloseq object
-data_its_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-dada2table.csv",
-                                         taxonomy.file = "/Users/moriahyoung/Downloads/REX_ITS_2021_2023-taxonomy.csv",
+data_its_unfiltered <- read_csv2phyloseq(otu.file = "/Users/moriahyoung/Downloads/ITS_2021_2023-dada2table.csv",
+                                         taxonomy.file = "/Users/moriahyoung/Downloads/ITS_2021_2023-taxonomy.csv",
                                          metadata.file = "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023_metadata.csv")
+
 summarize_phyloseq(data_its_unfiltered)
 
 # filter out non bacteria
@@ -299,18 +323,18 @@ summarize_phyloseq(data_its_uf4)
 # Export filtered data to desktop AND REX google shared drive
 # upload to desktop
 # otu table
-write.csv(data_its_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/REX_ITS_2021_2023-table-filtered.csv")
+write.csv(data_its_uf4@otu_table, "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023-table-filtered.csv")
 # taxonomy table
-write.csv(data_its_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/REX_ITS_2021_2023-taxonomy-filtered.csv")
+write.csv(data_its_uf4@tax_table, "/Users/moriahyoung/Desktop/phyloseq_object/ITS_2021_2023-taxonomy-filtered.csv")
 
 # upload these to REX google shared drive
 # otu table
-write.csv(data_its_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/REX_ITS_2021_2023-table-filtered.csv"), row.names=F)
+write.csv(data_its_uf4@otu_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/ITS_2021_2023-table-filtered.csv"), row.names=F)
 # taxonomy table
-write.csv(data_its_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/REX_ITS_2021_2023-taxonomy-filtered.csv"), row.names=F)
+write.csv(data_its_uf4@tax_table, file.path(dir,"microbes/16S & ITS/T7_warmx/L0/ITS/files to create phyloseq object/ITS_2021_2023-taxonomy-filtered.csv"), row.names=F)
 ```
 
-Removing contaminants
+# removing contaminants
 ```{r}
 # https://benjjneb.github.io/decontam/vignettes/decontam_intro.html
 library(devtools)
