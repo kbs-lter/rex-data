@@ -1,7 +1,7 @@
 ---
-title: "REX T7 warmx ITS Sequencing"
+title: "REX T7 warmx ITS Sequencing Pipeline"
 author: "Moriah Young"
-date: "2024-11-11"
+date: "updated 2024-11-11"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
