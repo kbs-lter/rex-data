@@ -240,5 +240,11 @@ hobo_data_all_filtered <- hobo_data_all[!(hobo_data_all$Date_Time >= "2022-03-27
 # 2023
 hobo_data_all_filtered <- hobo_data_all[!(hobo_data_all$Date_Time >= "2022-03-27 00:00:00" & hobo_data_all$Date_Time <= "2022-04-19 00:00:00"), ]
 
+hobo_data_all_filtered$Date_Time <- as.POSIXct(hobo_data_all_filtered$Date_Time, format = "%Y-%m-%d %H:%M:%S")
+# Convert Date_Time column to character for consistent formatting in CSV
+# Doing this because when we went to write.csv below the midnight time 00:00:00 would be missing.
+# By making the column a character, this problem goes away.
+hobo_data_all_filtered$Date_Time <- format(hobo_data_all_filtered$Date_Time, "%Y-%m-%d %H:%M:%S")
+
 # upload to drive
 write.csv(hobo_data_all_filtered, file.path(dir,"sensors/OTC Footprints/L1/T7_warmx_HOBO_L1.csv"), row.names=F)
